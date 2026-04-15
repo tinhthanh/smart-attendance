@@ -60,6 +60,9 @@ Mỗi entry theo format:
 - **Workflow 3 vòng (plan → verify peer deps → execute)** tránh được rollback (xem #02)
 - **Verify preset/template compat với TỪNG generator**, không chỉ version package (xem #02)
 - AI hay đề xuất bypass safeguard (`NX_IGNORE_UNSUPPORTED_*`, `--force`, `--no-verify`) khi gặp lỗi → reject, buộc tìm root cause
+- **"Idempotent" phải verify bằng diff counts**, không bằng exit code (xem #04)
+- **UUID namespace phải generate fresh + comment "do not change"**, không reuse từ examples (xem #04)
+- **Postinstall hook > manual generate** cho artifact phụ thuộc schema (Prisma client) — tránh drift (xem #04)
 - (thêm dần khi gặp)
 
 ---
@@ -280,7 +283,122 @@ Sau exec: in ra docker-compose.yml + .env.example để tôi review trước khi
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#04] <Next: T-003 Prisma + migration + seed>
+## [#04] T-003 — Prisma schema + init migration + idempotent seed
+- **Date:** 2026-04-15 → 2026-04-16
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** db / infra
+- **Phase:** scaffolding
+
+### Mục tiêu
+Wire Prisma 6 vào NestJS (PrismaService + global module), apply schema từ
+`docs/erd.md §3` nguyên văn, tạo migration đầu, và viết seed **thật sự
+idempotent** (chạy N lần → counts không đổi) cho 3 branches × 30 employees ×
+7 ngày data theo `docs/spec.md §12`.
+
+### Prompt
+Workflow 3 vòng tiếp tục:
+
+**Vòng 1 — Yêu cầu plan + lưu ý CREATEDB đã resolve:**
+```
+T-002 đã merge... Bắt đầu T-003 (Prisma + migration + seed)...
+1. git checkout -b feature/db-prisma-init develop
+2. Lập plan docs/plans/T-003-plan.md...
+   - Verify: schema.prisma copy ĐÚNG NGUYÊN VĂN từ docs/erd.md §3
+3. KHÔNG exec, KHÔNG cài dep. Reply plan để tôi confirm.
+Note: Postgres sa_app đã có CREATEDB superuser (verified T-002), không cần
+init.sql.
+```
+
+**Vòng 2 — Push back trên 1 trong 10 default + 2 câu hỏi chốt:**
+```
+9/10 OK. Đổi #5: DÙNG postinstall hook, KHÔNG manual generate.
+Q-A: Prisma client output path → giữ default
+Q-B: Seed idempotency thực sự → đề xuất deterministic timestamp
+```
+
+**Vòng 3 — Approve UUID v5 với 2 refinement:**
+```
+OK (a+) — approved.
+R1. uuid là devDependency (KHÔNG dependency)
+R2. Tách seed helpers ra file riêng (orchestrator vs helpers vs data)
+SEED_NAMESPACE — generate fresh, KHÔNG dùng UUID từ ví dụ
+```
+
+### AI sinh ra
+- `prisma/schema.prisma` (395 lines) — verbatim ERD §3, formatted + validated
+- `prisma/migrations/20260415171458_init/migration.sql` (420 lines)
+- `prisma/seed.ts` (orchestrator, 8 functions tuần tự)
+- `prisma/seed/helpers.ts` — SEED_NAMESPACE constant + UUID v5 builders +
+  bcrypt + date math
+- `prisma/seed/data.ts` — static data (3 branches, 9 departments, 30 employee
+  templates, 7-day patterns)
+- `apps/api/src/prisma/{prisma.service,prisma.module,index}.ts`
+- `package.json` — postinstall + 5 helper scripts + prisma config
+
+### Vấn đề phát hiện khi review
+
+**Insight #1: Idempotency phải sâu hơn "không lỗi"**
+- AI ban đầu chỉ propose deterministic timestamp (proposal a)
+- Push back: timestamp đơn lẻ không đủ vì `attendance_events` không có
+  `@@unique` natural key → upsert vẫn duplicate
+- AI tự đề xuất proposal a+: deterministic UUID v5 từ
+  `(employeeCode|workDate|type)` → cùng input → cùng UUID → upsert by id =
+  true idempotent
+- **Lesson:** "idempotent seed" = chạy N lần cho EXACT counts giống nhau,
+  không phải "không throw error". Verify bằng count diff trước/sau lần 2.
+
+**Insight #2: Generate fresh SEED_NAMESPACE, không reuse từ examples**
+- AI propose dùng UUID `6f1f8c9c-1234-5678-9abc-def012345678` từ comment ví dụ
+- Push back: dùng UUID này → mọi project copy code đều cùng namespace →
+  collision risk nếu dev import thư viện hoặc data từ project khác
+- AI generate fresh: `1e26cc03-4675-471c-ad34-63f88e1e5d19` qua
+  `node -e "console.log(crypto.randomUUID())"`
+- Comment trong code: "DO NOT CHANGE — changes break seed idempotency
+  across all dev machines"
+
+**Insight #3: postinstall hook > manual generate cho team**
+- AI đề xuất manual generate ban đầu (đơn giản hơn, không có magic)
+- Push back: manual = drift type giữa schema vs client = bug khó debug
+  trong team/CI
+- AI accept, thêm `"postinstall": "prisma generate"` vào scripts
+- Trade-off chấp nhận: pnpm install chậm hơn ~5s, đổi lại fresh client
+  mọi lúc
+
+**Insight #4 (bonus): T-002 followup được resolve trong T-002 → tiết kiệm task**
+- Plan T-002 cảnh báo cần `init.sql` cho CREATEDB
+- Verify thực tế trong T-002 phát hiện POSTGRES_USER bootstrap được cấp
+  superuser → có sẵn CREATEDB
+- T-003 không cần touch docker config → ít file hơn, ít risk hơn
+
+### Cách chỉnh sửa
+1. Confirm verify: `prisma migrate dev --name init` ✅, app start ✅
+2. Verify idempotency: chạy `pnpm prisma db seed` 2 lần → counts identical
+   (210 sessions, 394 events, 31 users)
+3. Verify bcrypt: psql query — 3 hashes prefix `$2b$`, length 60
+4. Verify schema match: `grep "^model |^enum"` → 27 (= ERD §3)
+5. Tạo PR develop ← feature/db-prisma-init
+
+### Kết quả cuối cùng
+- Commit: `259575d` — `feat(db): add prisma schema, init migration, idempotent seed`
+- Merge: `6a0378e` — PR #2 merged
+- Branch deleted local + remote
+- Test: 5/5 acceptance criteria pass + idempotency verified
+
+### Bài học rút ra
+- **"Idempotent" có nghĩa rõ: same input → same state**, không phải "không
+  throw". Verify bằng diff counts, không phải bằng exit code.
+- **UUID v5 namespace must be fresh và document rõ là không-được-đổi**
+  trong code comment. Reuse namespace từ ví dụ = bom hẹn giờ.
+- **Workflow 3 vòng tiếp tục hiệu quả:** 3 push back trong T-003 đều thay
+  đổi quyết định AI — chứng minh không phải "rubber stamp".
+- **Verify thực tế trong task trước có thể loại bỏ task sau:** init.sql
+  defer từ T-002 → resolved → không cần làm trong T-003.
+
+---
+
+<!-- Thêm entry mới ở dưới đây -->
+
+## [#05] <Next: T-005 Auth module hoặc T-004 Git Flow tooling>
 - **Date:**
 - **Tool:**
 - **Module:**
