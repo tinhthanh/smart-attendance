@@ -154,33 +154,12 @@ Mình đã đi theo Option A cho tất cả trong spec ở trên. Nếu OK hết
 
 ---
 
-## Followup for T-003 (Prisma migration)
+## Followup for T-003 (Prisma migration) — RESOLVED during T-002 verification
 
-**Heads-up, KHÔNG implement trong T-002:**
+**Original concern:** Prisma `migrate dev` needs CREATEDB privilege for shadow database.
 
-Prisma `migrate dev` cần user có quyền **CREATEDB** để tạo shadow database (dùng để detect drift). User `sa_app` mặc định trong plan này **KHÔNG** có CREATEDB → `prisma migrate dev` sẽ fail ngay lần chạy đầu ở T-003.
+**Discovery during T-002 verification (2026-04-15):** When `POSTGRES_USER` is set in the postgres image bootstrap, the entrypoint script creates that user as **superuser** (which implicitly has CREATEDB). Verified via `docker exec sa-postgres psql -U sa_app -d smart_attendance -c '\l'` — `sa_app` is owner of all databases including `template0`/`template1`, confirming superuser.
 
-**3 solution có sẵn:**
+**Conclusion:** No `init.sql` needed for T-003. `prisma migrate dev` will work out-of-the-box with `sa_app`.
 
-1. **Init script SQL** (recommended khi sang T-003):
-   - Tạo `docker/postgres/init.sql` với:
-     ```sql
-     ALTER USER sa_app CREATEDB;
-     ```
-   - Mount vào container: `./docker/postgres/init.sql:/docker-entrypoint-initdb.d/01-grants.sql:ro`
-   - Ưu: 1 user, đơn giản, idempotent (Postgres chỉ chạy init khi volume empty).
-   - Nhược: phải `docker compose down -v` để re-init nếu volume đã có data (→ mất data dev).
-
-2. **Prisma `shadowDatabaseUrl` với superuser**:
-   - `DATABASE_URL` dùng `sa_app`, thêm `SHADOW_DATABASE_URL` dùng `postgres` superuser.
-   - Ưu: tách bạch quyền, không cần ALTER.
-   - Nhược: 2 connection string, 2 password env, dev dễ nhầm.
-
-3. **User riêng `sa_migrator` có CREATEDB**:
-   - Tạo user thứ hai qua init.sql chỉ để migrate.
-   - Nhược: phức tạp nhất, lợi ích thấp cho dev.
-
-**Recommend**: đi solution #1 trong T-003. Khi bắt đầu T-003:
-- Tạo `docker/postgres/init.sql`
-- Update `docker-compose.yml` thêm volume mount
-- Note trong T-003 plan rằng dev đã có volume cũ phải `docker compose down -v` 1 lần để re-init (mất data dev local — chấp nhận được ở giai đoạn này).
+**Trade-off note:** `sa_app` having superuser in dev is acceptable for MVP. Production deployment (out of scope) should use a separate non-superuser app role with explicit grants — document this in production hardening guide later.

@@ -206,7 +206,81 @@ v0.2 + tạo docs/plans/T-001-incident-log.md.
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#03] <Next: T-002 Docker skeleton>
+## [#03] T-002 — Docker Compose skeleton (Postgres + Redis)
+- **Date:** 2026-04-15
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** infra
+- **Phase:** scaffolding
+
+### Mục tiêu
+`docker compose up -d` chạy được Postgres 16 + Redis 7 cho dev local, có healthcheck, security tốt (localhost-only), và `.env.example` đầy đủ var cho T-001 → T-005.
+
+### Prompt
+Workflow 3 vòng (plan → confirm → exec) tiếp tục áp dụng:
+
+**Vòng 1 — Yêu cầu plan + Git Flow đúng:**
+```
+Update trạng thái: T-001 ĐÃ commit + push xong... Pull develop về cho đồng bộ.
+Sau đó BẮT ĐẦU T-002 với workflow chuẩn theo CLAUDE.md §6:
+1. Tạo feature branch từ develop: feature/infra-docker-compose
+2. LẬP PLAN T-002 trước khi exec — lưu vào docs/plans/T-002-plan.md
+   (postgres config, redis config, .env vars, network, volumes, healthchecks,
+   7 quyết định cần xác nhận với A/B options).
+3. KHÔNG chạy lệnh nào, KHÔNG tạo file nào ngoài plan trước khi tôi confirm.
+```
+
+**Vòng 2 — Confirm 7 defaults + foreshadow Prisma:**
+```
+OK cả 7 defaults. Exec.
+1 lưu ý nhỏ cho T-003: Prisma migrate dev cần CREATEDB. Đề xuất docker/postgres/init.sql.
+KHÔNG implement init.sql trong T-002 — chỉ note vào plan mục "Followup for T-003".
+Sau exec: in ra docker-compose.yml + .env.example để tôi review trước khi commit.
+```
+
+### AI sinh ra
+- `docker-compose.yml` (48 lines): postgres:16-alpine + redis:7-alpine, named volumes, custom bridge network `sa-net`, healthchecks, `127.0.0.1:` binding.
+- `.env.example` (22 lines): Postgres, Redis, API, JWT, frontend ports — comments rõ ràng, no real secrets.
+- `docs/plans/T-002-plan.md` v0.1: 7 quyết định kiến trúc + risk matrix + acceptance mapping.
+
+### Vấn đề phát hiện khi review
+
+**Vấn đề 1: Port 5432 conflict trên máy dev local**
+- Compose fail với: `Error response from daemon: Ports are not available: ... bind: address already in use`
+- Root cause: máy dev đang chạy Postgres native (brew/Postgres.app)
+- **Resolution:** không sửa `docker-compose.yml` (mặc định 5432 đúng cho repo). Thay vào đó, **chỉ override trong `.env` local** (POSTGRES_PORT=5433 + DATABASE_URL port 5433). Container internal vẫn 5432, chỉ host binding đổi.
+- → Nhờ design tốt từ đầu (`POSTGRES_PORT=${POSTGRES_PORT:-5432}` trong compose), không cần touch file committed.
+
+**Bonus discovery: CREATEDB không cần init.sql**
+- Plan ban đầu lo `sa_app` không có CREATEDB → cần `docker/postgres/init.sql` cho T-003.
+- Khi verify thực tế bằng `docker exec sa-postgres psql -U sa_app -d smart_attendance -c '\l'`:
+  - `sa_app` là owner của TẤT CẢ databases (kể cả `template0`, `template1`)
+  - → Postgres image cấp **superuser** cho user khai báo qua `POSTGRES_USER` env
+  - → CREATEDB có sẵn, T-003 không cần init.sql
+- **Update:** `docs/plans/T-002-plan.md` mục "Followup for T-003" rewrite từ "TODO" → "RESOLVED during verification". Trade-off: superuser trong dev OK; production cần tách non-superuser app role (note để hardening sau).
+
+### Cách chỉnh sửa
+1. Verify acceptance criteria: ✅ 4/4 (compose up, healthy, psql connect, redis ping)
+2. Override `.env` POSTGRES_PORT=5433 (local-only, không commit)
+3. Update plan file: rewrite "Followup for T-003"
+4. Tạo PR develop ← feature/infra-docker-compose
+5. User merge PR → pull develop → cleanup local branch
+
+### Kết quả cuối cùng
+- Commit feature: `a7fddc4` — `chore(infra): add docker compose for postgres + redis dev env`
+- Merge commit: `bd539bb` — PR #1 merged
+- Branch: `feature/infra-docker-compose` (deleted sau merge)
+- Test: 4/4 acceptance criteria pass
+
+### Bài học rút ra
+- **Verify thực tế > đọc docs:** tài liệu Postgres image không nói rõ user qua `POSTGRES_USER` là superuser. Verify bằng `psql \l` 5 giây tiết kiệm 1 task không cần thiết (init.sql).
+- **Đừng hardcode port trong compose committed:** dùng `${VAR:-default}` syntax ngay từ đầu — khi máy dev có conflict (rất thường gặp), chỉ cần override `.env` local.
+- **Git Flow strict cho infra task vẫn đáng:** PR #1 cho thấy diff sạch, dễ review, có audit trail. Không tốn thời gian thêm so với commit thẳng develop.
+
+---
+
+<!-- Thêm entry mới ở dưới đây -->
+
+## [#04] <Next: T-003 Prisma + migration + seed>
 - **Date:**
 - **Tool:**
 - **Module:**
