@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '10.18.1'
+
+jobs:
+  ci:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: smart_attendance
+          POSTGRES_USER: sa_app
+          POSTGRES_PASSWORD: ci_test_pw
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sa_app -d smart_attendance"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 3s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://sa_app:ci_test_pw@localhost:5432/smart_attendance?schema=public
+      REDIS_URL: redis://localhost:6379/0
+      JWT_ACCESS_SECRET: ci_dummy_access_secret
+      JWT_REFRESH_SECRET: ci_dummy_refresh_secret
+      JWT_ACCESS_TTL: 15m
+      JWT_REFRESH_TTL: 7d
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Nx
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-${{ runner.os }}-${{ github.sha }}
+          restore-keys: nx-${{ runner.os }}-
+
+      - name: Prisma migrate (CI database)
+        run: pnpm prisma migrate deploy
+
+      - name: Lint
+        run: pnpm nx run-many --target=lint --all --parallel=3
+
+      - name: Test
+        run: pnpm nx run-many --target=test --all --parallel=3
+
+      - name: Build
+        run: pnpm nx run-many --target=build --all --parallel=2
