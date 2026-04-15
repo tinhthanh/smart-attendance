@@ -19,6 +19,8 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
+      "@smart-attendance/api/auth": ["libs/api/auth/src/index.ts"],
+      "@smart-attendance/api/common": ["libs/api/common/src/index.ts"],
       "@smart-attendance/shared/constants": [
         "libs/shared/constants/src/index.ts"
       ],
