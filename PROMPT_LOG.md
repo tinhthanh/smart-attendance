@@ -73,6 +73,9 @@ Mỗi entry theo format:
 - **AI có thể catch lỗi user** khi có context user không nhớ (vd: git log) — cho phép push back 2 chiều (xem #05)
 - **Scope enum tránh trùng tên với conventional commit types** (test/fix/chore/docs/feat/...) — tránh ambiguity (xem #05)
 - **CI credentials tách bạch khỏi dev/.env.example** — không reuse, ngay từ MVP (xem #05)
+- **Nx cache local HIDE test failures** mà CI sẽ catch — trước commit task lớn `pnpm nx reset && nx run-many --target=test --all` (xem #06)
+- **AI proactive về bảo mật khi prompt nhấn "đặc biệt cẩn thận"** — không cần chỉ định từng pattern (refresh rotation, replay detection) (xem #06)
+- **Library type churn:** cast với comment + defer là acceptable pattern (xem #06)
 - (thêm dần khi gặp)
 
 ---
@@ -578,7 +581,121 @@ commitlint.config.js header comment):
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#06] <Next: T-005 Auth module>
+## [#06] T-005 — Auth module (JWT + RBAC + refresh rotation + rate limit)
+
+- **Date:** 2026-04-16
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** auth
+- **Phase:** feature (task lớn nhất ngày 2)
+
+### Mục tiêu
+
+4 endpoints (login/refresh/logout/me) với JWT access+refresh, RBAC 3 role, refresh rotation atomic + replay detection, rate limit, Joi env validation, > 80% test coverage. Tạo nền tảng `libs/api/common` (Prisma + interceptor + filter) cho T-006/T-007 reuse.
+
+### Prompt
+
+Workflow 3 vòng tiếp tục, lần này prompt vòng 1 dài & chi tiết hơn vì task lớn (10 quyết định cần xác nhận + 4 ràng buộc bảo mật).
+
+**Vòng 1 — Pre-work + plan + 10 decisions:**
+
+```
+Bắt đầu T-005 (Auth module — task lớn nhất ngày 2). Workflow chuẩn 3 vòng.
+PRE-WORK: verify state hiện tại (libs/api/ chưa có, PrismaModule global,
+bcrypt 6.0.0 đã cài, 3 test accounts từ T-003 seed).
+Lập plan với 10 quyết định: lib structure, deps, endpoints, JWT config,
+refresh storage (DB vs Redis), guards & decorators, rate limit, DTO,
+unit tests scope, etc.
+Đặc biệt cẩn thận: refresh rotation atomic ($transaction), JWT secret
+strength check ≥32 char, no password_hash leak, no user enumeration.
+```
+
+**Vòng 2 — 3 confirm + 3 refinements:**
+
+```
+C1. Schema refresh_tokens: id (jti), userId cascade, expiresAt, revokedAt,
+    replacedBy, ipAddress, userAgent. INDEX (userId, revokedAt).
+C2. Side effects login: lastLoginAt + audit_log.action='login' trong cùng
+    $transaction với create refresh_token.
+C3. JWT secret strength check timing: Joi schema trong ConfigModule (NestJS
+    standard, fail at boot).
+R1. libs/api/common phải có sẵn types + DTO chung cho T-006 reuse.
+R2. Throttler config tách ra libs/shared/constants/rate-limits.ts.
+R3. Test naming "should <expected> when <condition>" (CLAUDE.md §4.6).
+```
+
+### AI sinh ra
+
+- **`libs/api/auth`** (12 files): module + service + controller + jwt strategy + guards + decorators + 2 DTO + 2 spec (16 tests)
+- **`libs/api/common`** (9 files): PrismaService (moved), ResponseTransformInterceptor, HttpExceptionFilter, BusinessException, ErrorCode enum, PaginationDto, types
+- **`apps/api/src/app/env.validation.ts`** — Joi schema validate DATABASE*URL, JWT*\* ≥32 char, TTL regex
+- **Migration** `add_refresh_tokens` — RefreshToken model với index (userId, revokedAt)
+- **`libs/shared/constants/rate-limits.ts`** — RATE_LIMITS.LOGIN
+- 16 unit tests pass, smoke 3/3 pass
+
+### Vấn đề phát hiện khi review
+
+**Insight #1: AI tự đề xuất security pattern OAuth2-grade**
+
+- Vòng 1 plan đã tự include refresh rotation + replay detection (revoke ALL user's tokens khi replay)
+- AI không cần được nhắc — proactive vì prompt nhấn mạnh "đặc biệt cẩn thận về bảo mật"
+- **Lesson:** "đặc biệt cẩn thận" trong prompt giúp AI surface best practice ngay từ design
+
+**Insight #2: CI fail vì stale Nx-generated test (Local cache hide failure)**
+
+- Sau commit `2c8b97d`, CI fail với:
+  > apps/api/src/app/app.controller.spec.ts: TS2339 Property 'getData' does not exist on type 'AppController'
+- Root cause: T-005 đổi `getData()` → `getHealth()` trong controller, nhưng spec file Nx-generated từ T-001 vẫn ref `getData()`
+- Local `pnpm nx test api` PASS vì Nx cache cũ — chỉ test các spec đã thay đổi, không re-test stale spec
+- CI fresh cache → catch ngay
+- **Resolution:** commit `5f788bd` fix spec để dùng `getHealth()`
+- **Lesson critical:** trước commit task lớn, CHẠY `pnpm nx reset && pnpm nx run-many --target=test --all` để force fresh run. Hoặc tin CI là source of truth.
+
+**Insight #3: @nestjs/jwt v11 type strictness cho expiresIn**
+
+- @nestjs/jwt v11 dùng `ms` library `StringValue` template literal type cho `expiresIn`
+- Env trả `string` thường, không tự inferable
+- AI dùng cast `as unknown as number` (3 chỗ) — runtime work, type không verify
+- AI flag rõ trong commit message + đề xuất defer refactor sang helper
+- **Lesson:** không phải mọi type warning đều cần fix ngay. Cast với comment + defer là acceptable khi library API churn.
+
+**Insight #4: 36 files được lint-staged auto-format khi commit**
+
+- Lần đầu commit task lớn sau khi setup commitlint + lint-staged (T-004)
+- 36 TS files (Nx-generated + new) được prettier format auto
+- Không có conflict, không rollback — workflow setup đúng
+- **Lesson:** đầu tư T-004 (Git Flow tooling) đã trả công ngay tại T-005.
+
+### Cách chỉnh sửa
+
+1. Verify nx test auth + common pass local
+2. Smoke 3 cases với curl thật (login success/fail/rate limit)
+3. Commit `2c8b97d` (36 files tự format qua lint-staged)
+4. Push → PR #4 → CI fail → fix stale spec (commit `5f788bd`) → CI pass
+5. User merge → cleanup branch
+
+### Kết quả cuối cùng
+
+- Commits:
+  - `2c8b97d` — `feat(auth): add JWT auth + RBAC + refresh rotation + rate limit`
+  - `5f788bd` — `fix(api): update stale app controller spec for getHealth rename`
+- Merge: `2d7ef5c` — PR #4
+- Branch deleted local + remote
+- Test: 16/16 unit + 3/3 smoke + CI pass
+- Coverage: > 80% cho libs/api/auth
+
+### Bài học rút ra
+
+- **Nx cache local có thể HIDE test failures mà CI sẽ catch.** Trước commit task lớn → `pnpm nx reset && pnpm nx run-many --target=test --all`. Hoặc tin CI là first source of truth.
+- **AI tự đề xuất OAuth2 best practice** khi prompt nhấn "đặc biệt cẩn thận về bảo mật" — không cần chỉ định từng pattern.
+- **Library type churn (như @nestjs/jwt v11 `ms` types):** cast với comment + defer refactor là acceptable, không cần fix ngay.
+- **T-004 investment paid off ngay tại T-005** — 36 files auto-formatted qua lint-staged, không conflict.
+- **Refresh rotation atomic + replay detection = revoke all** là pattern bắt buộc cho production-grade auth, dù MVP cũng nên dùng (cost thấp, benefit lớn cho điểm "thương mại hóa được").
+
+---
+
+<!-- Thêm entry mới ở dưới đây -->
+
+## [#07] <Next: T-006 Branches CRUD>
 
 - **Date:**
 - **Tool:**
