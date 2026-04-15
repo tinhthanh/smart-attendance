@@ -10,30 +10,37 @@ Mỗi entry theo format:
 
 ```markdown
 ## [#XX] <Mục tiêu ngắn gọn>
+
 - **Date:** YYYY-MM-DD
 - **Tool:** Claude Code | Cursor | Copilot
 - **Module:** auth | attendance | dashboard | ...
 - **Phase:** spec | scaffolding | feature | bugfix | refactor | test | docs
 
 ### Mục tiêu
+
 <1-2 câu mô tả muốn AI làm gì>
 
 ### Prompt
+
 \`\`\`
 <paste prompt thực tế đã gửi>
 \`\`\`
 
 ### AI sinh ra
+
 <tóm tắt: file/function nào, dùng pattern gì>
 
 ### Vấn đề phát hiện khi review
+
 - ...
 - ...
 
 ### Cách chỉnh sửa
+
 - ...
 
 ### Kết quả cuối cùng
+
 - Commit: `<hash>` hoặc PR `#NN`
 - Test: pass/fail
 - Note: <điều rút ra>
@@ -63,6 +70,9 @@ Mỗi entry theo format:
 - **"Idempotent" phải verify bằng diff counts**, không bằng exit code (xem #04)
 - **UUID namespace phải generate fresh + comment "do not change"**, không reuse từ examples (xem #04)
 - **Postinstall hook > manual generate** cho artifact phụ thuộc schema (Prisma client) — tránh drift (xem #04)
+- **AI có thể catch lỗi user** khi có context user không nhớ (vd: git log) — cho phép push back 2 chiều (xem #05)
+- **Scope enum tránh trùng tên với conventional commit types** (test/fix/chore/docs/feat/...) — tránh ambiguity (xem #05)
+- **CI credentials tách bạch khỏi dev/.env.example** — không reuse, ngay từ MVP (xem #05)
 - (thêm dần khi gặp)
 
 ---
@@ -72,15 +82,18 @@ Mỗi entry theo format:
 ---
 
 ## [#01] Khởi tạo spec + ERD + API contract
+
 - **Date:** 2026-04-15
 - **Tool:** Claude Code (Opus 4.6)
 - **Module:** docs
 - **Phase:** spec
 
 ### Mục tiêu
+
 Phân tích đề bài + tạo bộ tài liệu nền: `spec.md`, `erd.md`, `api-spec.md`, `CLAUDE.md`, `PROMPT_LOG.md`, `README.md`.
 
 ### Prompt
+
 ```
 giúp tôi phân tích bài tập README.MD
 Công nghệ: ionic + nestjs + prisma
@@ -93,6 +106,7 @@ dùng nx, postgres cho database
 ```
 
 ### AI sinh ra
+
 - `docs/spec.md` (14 mục, ~470 dòng): rule nghiệp vụ, trust score, anti-fraud, scale strategy, MVP scope
 - `docs/erd.md` (10 mục): Mermaid ERD + Prisma schema đầy đủ + index strategy + partition plan
 - `docs/api-spec.md` (13 mục): convention, 8 module API với request/response + error catalog
@@ -101,14 +115,17 @@ dùng nx, postgres cho database
 - `README.md`: khung dự án
 
 ### Vấn đề phát hiện khi review
+
 - (chờ team review)
 - Cần verify Capacitor plugin Wi-Fi cho iOS/Android trước ngày 2
 - Schema chưa migration thực tế — cần `prisma migrate dev` để confirm
 
 ### Cách chỉnh sửa
+
 - (cập nhật khi review xong)
 
 ### Kết quả cuối cùng
+
 - Commit: `165a53f` — `docs: initial spec, ERD, API contract, AI context`
 - Test: N/A (docs)
 - Note: Bộ tài liệu này là **đầu vào bắt buộc** cho mọi prompt sau. Mỗi feature mới phải reference spec/api-spec.
@@ -116,18 +133,22 @@ dùng nx, postgres cho database
 ---
 
 ## [#02] T-001 — Khởi tạo Nx workspace
+
 - **Date:** 2026-04-15
 - **Tool:** Claude Code (Sonnet, agent mode)
 - **Module:** infra / monorepo
 - **Phase:** scaffolding
 
 ### Mục tiêu
+
 Tạo Nx monorepo với 3 apps (api/portal/mobile) + 3 libs shared theo `CLAUDE.md §3` và `docs/tasks.md` T-001.
 
 ### Prompt
+
 Workflow 3 vòng (plan → verify → execute), không chạy 1 phát:
 
 **Vòng 1 — Yêu cầu plan chi tiết:**
+
 ```
 Chọn option 2 — lập plan chi tiết TRƯỚC khi thực thi.
 Cụ thể tôi cần plan gồm: [danh sách lệnh, dependency pinned, structure cây
@@ -136,6 +157,7 @@ KHÔNG chạy lệnh nào cho đến khi tôi review plan và confirm.
 ```
 
 **Vòng 2 — Verify peer dependencies trước khi exec:**
+
 ```
 Verify Nx 22 vs Angular 20 peer compatibility. Lưu plan thành
 docs/plans/T-001-plan.md. Sau rsync xong, in git status để tôi review,
@@ -143,12 +165,14 @@ KHÔNG tự commit.
 ```
 
 **Vòng 3 — Quyết định khi gặp incident (xem dưới):**
+
 ```
 Chọn Option B — rescaffold với --preset=apps. Update docs/plans/T-001-plan.md
 v0.2 + tạo docs/plans/T-001-incident-log.md.
 ```
 
 ### AI sinh ra
+
 - `docs/plans/T-001-plan.md` (v0.2) — chốt tech stack: Nx 21.6.10 + Angular
   20.3 + Ionic 8.8.3 + Capacitor 8.3 + TS 5.9
 - `docs/plans/T-001-incident-log.md` — root cause + lesson learned
@@ -159,6 +183,7 @@ v0.2 + tạo docs/plans/T-001-incident-log.md.
 ### Vấn đề phát hiện khi review
 
 **Incident #1: Sai preset chọn ban đầu**
+
 - AI ban đầu chọn `--preset=ts` cho `create-nx-workspace`. Generate apps/api
   (NestJS) thành công, nhưng `nx g @nx/angular:app portal` fail với:
   > The "@nx/angular:application" generator doesn't support the existing
@@ -174,6 +199,7 @@ v0.2 + tạo docs/plans/T-001-incident-log.md.
   → bị reject vì vi phạm cờ đỏ "không tắt safeguard" trong tasks.md.
 
 **Vấn đề khác khi review:**
+
 - `package.json` name = `@sa-init/source` (từ tên scaffold tạm) → đổi thành
   `@smart-attendance/source`.
 - `scripts: {}` trống → thêm convenience scripts (start:api, build, test, lint).
@@ -183,18 +209,21 @@ v0.2 + tạo docs/plans/T-001-incident-log.md.
 - `reflect-metadata ^0.1.13` → defer verify khi T-005 NestJS auth.
 
 ### Cách chỉnh sửa
+
 1. Switch preset → tự rescaffold `/tmp/sa-init` với `--preset=apps`.
 2. Rsync về repo chính, exclude `.git/`, `docs/`, `*.md` root, `.gitignore`.
 3. Sửa `package.json` name + scripts (manual edit).
 4. Append known issues vào `T-001-incident-log.md` để revisit sau.
 
 ### Kết quả cuối cùng
+
 - Commit: `75c87ea` — `chore: init nx workspace with api, portal, mobile apps`
 - Branch: `develop` (pushed)
 - Test: `nx graph` 7 projects ✅, `pnpm install` OK ✅
 - File tracking: `docs/plans/T-001-plan.md` v0.2 + `T-001-incident-log.md`
 
 ### Bài học rút ra (cập nhật vào header file)
+
 - **Khi planning Nx:** verify preset compatibility với TỪNG generator dự định
   dùng, không chỉ verify version package. `--preset=ts` ≠ "TypeScript-friendly
   preset" — nó là package-based với project references.
@@ -210,18 +239,22 @@ v0.2 + tạo docs/plans/T-001-incident-log.md.
 <!-- Thêm entry mới ở dưới đây -->
 
 ## [#03] T-002 — Docker Compose skeleton (Postgres + Redis)
+
 - **Date:** 2026-04-15
 - **Tool:** Claude Code (Sonnet, agent mode)
 - **Module:** infra
 - **Phase:** scaffolding
 
 ### Mục tiêu
+
 `docker compose up -d` chạy được Postgres 16 + Redis 7 cho dev local, có healthcheck, security tốt (localhost-only), và `.env.example` đầy đủ var cho T-001 → T-005.
 
 ### Prompt
+
 Workflow 3 vòng (plan → confirm → exec) tiếp tục áp dụng:
 
 **Vòng 1 — Yêu cầu plan + Git Flow đúng:**
+
 ```
 Update trạng thái: T-001 ĐÃ commit + push xong... Pull develop về cho đồng bộ.
 Sau đó BẮT ĐẦU T-002 với workflow chuẩn theo CLAUDE.md §6:
@@ -233,6 +266,7 @@ Sau đó BẮT ĐẦU T-002 với workflow chuẩn theo CLAUDE.md §6:
 ```
 
 **Vòng 2 — Confirm 7 defaults + foreshadow Prisma:**
+
 ```
 OK cả 7 defaults. Exec.
 1 lưu ý nhỏ cho T-003: Prisma migrate dev cần CREATEDB. Đề xuất docker/postgres/init.sql.
@@ -241,6 +275,7 @@ Sau exec: in ra docker-compose.yml + .env.example để tôi review trước khi
 ```
 
 ### AI sinh ra
+
 - `docker-compose.yml` (48 lines): postgres:16-alpine + redis:7-alpine, named volumes, custom bridge network `sa-net`, healthchecks, `127.0.0.1:` binding.
 - `.env.example` (22 lines): Postgres, Redis, API, JWT, frontend ports — comments rõ ràng, no real secrets.
 - `docs/plans/T-002-plan.md` v0.1: 7 quyết định kiến trúc + risk matrix + acceptance mapping.
@@ -248,12 +283,14 @@ Sau exec: in ra docker-compose.yml + .env.example để tôi review trước khi
 ### Vấn đề phát hiện khi review
 
 **Vấn đề 1: Port 5432 conflict trên máy dev local**
+
 - Compose fail với: `Error response from daemon: Ports are not available: ... bind: address already in use`
 - Root cause: máy dev đang chạy Postgres native (brew/Postgres.app)
 - **Resolution:** không sửa `docker-compose.yml` (mặc định 5432 đúng cho repo). Thay vào đó, **chỉ override trong `.env` local** (POSTGRES_PORT=5433 + DATABASE_URL port 5433). Container internal vẫn 5432, chỉ host binding đổi.
 - → Nhờ design tốt từ đầu (`POSTGRES_PORT=${POSTGRES_PORT:-5432}` trong compose), không cần touch file committed.
 
 **Bonus discovery: CREATEDB không cần init.sql**
+
 - Plan ban đầu lo `sa_app` không có CREATEDB → cần `docker/postgres/init.sql` cho T-003.
 - Khi verify thực tế bằng `docker exec sa-postgres psql -U sa_app -d smart_attendance -c '\l'`:
   - `sa_app` là owner của TẤT CẢ databases (kể cả `template0`, `template1`)
@@ -262,6 +299,7 @@ Sau exec: in ra docker-compose.yml + .env.example để tôi review trước khi
 - **Update:** `docs/plans/T-002-plan.md` mục "Followup for T-003" rewrite từ "TODO" → "RESOLVED during verification". Trade-off: superuser trong dev OK; production cần tách non-superuser app role (note để hardening sau).
 
 ### Cách chỉnh sửa
+
 1. Verify acceptance criteria: ✅ 4/4 (compose up, healthy, psql connect, redis ping)
 2. Override `.env` POSTGRES_PORT=5433 (local-only, không commit)
 3. Update plan file: rewrite "Followup for T-003"
@@ -269,12 +307,14 @@ Sau exec: in ra docker-compose.yml + .env.example để tôi review trước khi
 5. User merge PR → pull develop → cleanup local branch
 
 ### Kết quả cuối cùng
+
 - Commit feature: `a7fddc4` — `chore(infra): add docker compose for postgres + redis dev env`
 - Merge commit: `bd539bb` — PR #1 merged
 - Branch: `feature/infra-docker-compose` (deleted sau merge)
 - Test: 4/4 acceptance criteria pass
 
 ### Bài học rút ra
+
 - **Verify thực tế > đọc docs:** tài liệu Postgres image không nói rõ user qua `POSTGRES_USER` là superuser. Verify bằng `psql \l` 5 giây tiết kiệm 1 task không cần thiết (init.sql).
 - **Đừng hardcode port trong compose committed:** dùng `${VAR:-default}` syntax ngay từ đầu — khi máy dev có conflict (rất thường gặp), chỉ cần override `.env` local.
 - **Git Flow strict cho infra task vẫn đáng:** PR #1 cho thấy diff sạch, dễ review, có audit trail. Không tốn thời gian thêm so với commit thẳng develop.
@@ -284,21 +324,25 @@ Sau exec: in ra docker-compose.yml + .env.example để tôi review trước khi
 <!-- Thêm entry mới ở dưới đây -->
 
 ## [#04] T-003 — Prisma schema + init migration + idempotent seed
+
 - **Date:** 2026-04-15 → 2026-04-16
 - **Tool:** Claude Code (Sonnet, agent mode)
 - **Module:** db / infra
 - **Phase:** scaffolding
 
 ### Mục tiêu
+
 Wire Prisma 6 vào NestJS (PrismaService + global module), apply schema từ
 `docs/erd.md §3` nguyên văn, tạo migration đầu, và viết seed **thật sự
 idempotent** (chạy N lần → counts không đổi) cho 3 branches × 30 employees ×
 7 ngày data theo `docs/spec.md §12`.
 
 ### Prompt
+
 Workflow 3 vòng tiếp tục:
 
 **Vòng 1 — Yêu cầu plan + lưu ý CREATEDB đã resolve:**
+
 ```
 T-002 đã merge... Bắt đầu T-003 (Prisma + migration + seed)...
 1. git checkout -b feature/db-prisma-init develop
@@ -310,6 +354,7 @@ init.sql.
 ```
 
 **Vòng 2 — Push back trên 1 trong 10 default + 2 câu hỏi chốt:**
+
 ```
 9/10 OK. Đổi #5: DÙNG postinstall hook, KHÔNG manual generate.
 Q-A: Prisma client output path → giữ default
@@ -317,6 +362,7 @@ Q-B: Seed idempotency thực sự → đề xuất deterministic timestamp
 ```
 
 **Vòng 3 — Approve UUID v5 với 2 refinement:**
+
 ```
 OK (a+) — approved.
 R1. uuid là devDependency (KHÔNG dependency)
@@ -325,6 +371,7 @@ SEED_NAMESPACE — generate fresh, KHÔNG dùng UUID từ ví dụ
 ```
 
 ### AI sinh ra
+
 - `prisma/schema.prisma` (395 lines) — verbatim ERD §3, formatted + validated
 - `prisma/migrations/20260415171458_init/migration.sql` (420 lines)
 - `prisma/seed.ts` (orchestrator, 8 functions tuần tự)
@@ -338,6 +385,7 @@ SEED_NAMESPACE — generate fresh, KHÔNG dùng UUID từ ví dụ
 ### Vấn đề phát hiện khi review
 
 **Insight #1: Idempotency phải sâu hơn "không lỗi"**
+
 - AI ban đầu chỉ propose deterministic timestamp (proposal a)
 - Push back: timestamp đơn lẻ không đủ vì `attendance_events` không có
   `@@unique` natural key → upsert vẫn duplicate
@@ -348,6 +396,7 @@ SEED_NAMESPACE — generate fresh, KHÔNG dùng UUID từ ví dụ
   không phải "không throw error". Verify bằng count diff trước/sau lần 2.
 
 **Insight #2: Generate fresh SEED_NAMESPACE, không reuse từ examples**
+
 - AI propose dùng UUID `6f1f8c9c-1234-5678-9abc-def012345678` từ comment ví dụ
 - Push back: dùng UUID này → mọi project copy code đều cùng namespace →
   collision risk nếu dev import thư viện hoặc data từ project khác
@@ -357,6 +406,7 @@ SEED_NAMESPACE — generate fresh, KHÔNG dùng UUID từ ví dụ
   across all dev machines"
 
 **Insight #3: postinstall hook > manual generate cho team**
+
 - AI đề xuất manual generate ban đầu (đơn giản hơn, không có magic)
 - Push back: manual = drift type giữa schema vs client = bug khó debug
   trong team/CI
@@ -365,12 +415,14 @@ SEED_NAMESPACE — generate fresh, KHÔNG dùng UUID từ ví dụ
   mọi lúc
 
 **Insight #4 (bonus): T-002 followup được resolve trong T-002 → tiết kiệm task**
+
 - Plan T-002 cảnh báo cần `init.sql` cho CREATEDB
 - Verify thực tế trong T-002 phát hiện POSTGRES_USER bootstrap được cấp
   superuser → có sẵn CREATEDB
 - T-003 không cần touch docker config → ít file hơn, ít risk hơn
 
 ### Cách chỉnh sửa
+
 1. Confirm verify: `prisma migrate dev --name init` ✅, app start ✅
 2. Verify idempotency: chạy `pnpm prisma db seed` 2 lần → counts identical
    (210 sessions, 394 events, 31 users)
@@ -379,12 +431,14 @@ SEED_NAMESPACE — generate fresh, KHÔNG dùng UUID từ ví dụ
 5. Tạo PR develop ← feature/db-prisma-init
 
 ### Kết quả cuối cùng
+
 - Commit: `259575d` — `feat(db): add prisma schema, init migration, idempotent seed`
 - Merge: `6a0378e` — PR #2 merged
 - Branch deleted local + remote
 - Test: 5/5 acceptance criteria pass + idempotency verified
 
 ### Bài học rút ra
+
 - **"Idempotent" có nghĩa rõ: same input → same state**, không phải "không
   throw". Verify bằng diff counts, không phải bằng exit code.
 - **UUID v5 namespace must be fresh và document rõ là không-được-đổi**
@@ -398,7 +452,134 @@ SEED_NAMESPACE — generate fresh, KHÔNG dùng UUID từ ví dụ
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#05] <Next: T-005 Auth module hoặc T-004 Git Flow tooling>
+## [#05] T-004 — Git Flow tooling (commitlint + husky + lint-staged + CI)
+
+- **Date:** 2026-04-16
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** infra / ci
+- **Phase:** scaffolding
+
+### Mục tiêu
+
+Enforce Conventional Commits + auto-format trên mọi commit, setup GitHub
+Actions CI chạy lint/test/build trên PR. Mục tiêu phụ: ăn điểm "Git Flow
+& Docker 15%" của đề bài.
+
+### Prompt
+
+**Vòng 1:** Lập plan theo workflow chuẩn 3 vòng đã thiết lập từ T-001.
+
+**Vòng 2 — Push back trên scope enum:**
+
+```
+Approve Option A cho 1, 3, 4, 5, 6, 7, 8, 9.
+Quyết định #2 → chọn (ii): Strict scope enum, KHÔNG có "test" trong enum.
+Lý do: "test" là một TYPE trong conventional commits, thêm vào scope tạo
+ambiguity. Update docs/tasks.md T-004 acceptance: feat(test) → feat(infra).
+```
+
+**Vòng 3 — AI catch lỗi của user (rất hay):**
+
+```
+[AI nhắc] Bạn propose 13 scopes nhưng bỏ "prompt-log" mà bạn đã dùng 3 lần
+trong git log. Nếu enum không có → docs(prompt-log): ... sẽ FAIL.
+Cũng nên thêm api/portal/mobile/shared cho Nx convention.
+Đề xuất 18 scopes total.
+```
+
+**Vòng 4 — User accept:**
+
+```
+Chọn (A) — 18 scopes. Bạn bắt đúng lỗi của tôi.
+Convention rule cho dev khi pick scope (priority order, document trong
+commitlint.config.js header comment):
+1. Module nghiệp vụ (auth/branches/...) → ưu tiên
+2. Nx layer (api/portal/mobile/shared) → khi cross-module trong 1 layer
+3. Cross-project → infra/ci/deps
+4. PROMPT_LOG → prompt-log
+5. Other docs → docs
+```
+
+### AI sinh ra
+
+- `.husky/{commit-msg,pre-commit}` (minimal, npx --no-install pattern)
+- `commitlint.config.js` — 18-scope enum + convention rule comment + tắt
+  subject-case (cho tiếng Việt dấu) + tắt body/footer-max-line
+- `.lintstagedrc.json` — eslint --fix + prettier --write per file type
+- `.github/PULL_REQUEST_TEMPLATE.md` — summary/changes/test plan/checklist
+- `.github/workflows/ci.yml` — postgres+redis services, draft skip,
+  concurrency cancel, prisma migrate deploy, parallel lint/test/build
+- `package.json` — `"prepare": "husky"` + 4 devDeps pinned
+
+### Vấn đề phát hiện khi review
+
+**Insight #1: AI catch lỗi user (role reversal hữu ích)**
+
+- User propose 13 scopes nhưng quên scope đã dùng thực tế 3 lần
+  (`prompt-log`)
+- AI grep git log, phát hiện inconsistency, đề xuất bổ sung
+- → **Lesson:** không phải lúc nào user cũng đúng. AI có context (git log)
+  mà user không nhớ → push back hữu ích cả 2 chiều.
+
+**Insight #2: "test" trong scope enum tạo ambiguity với conventional type**
+
+- AI initial propose `test` trong scope enum (acceptance example dùng
+  `feat(test): hello`)
+- User push back: `test` đã là conventional type → `test(test): foo` đọc
+  rất confusing
+- Resolution: rewrite docs/tasks.md acceptance, không thêm `test` vào enum
+- → **Lesson:** Đặt tên scope phải tránh xung đột với type list của
+  conventional commits.
+
+**Insight #3: CI credentials phải tách bạch dev/CI**
+
+- Plan ban đầu định reuse `change_me_local_dev` từ `.env.example` cho CI
+- Refinement: CI dùng `ci_test_pw` riêng — tránh dev creds leak vào CI
+  logs, và tránh copy-paste CI creds vào dev local
+- Document divergence trong T-004-plan.md
+
+**Insight #4: Hooks verify thật, không chỉ "không error"**
+
+- Test sequence: bad commit MUST fail → good commit MUST pass → reset
+- Verify lint-staged thực sự format file khi commit (chứng cứ trong
+  output: "8 files formatted")
+- actionlint qua Docker validate YAML không cần install local
+
+### Cách chỉnh sửa
+
+1. Test bad commit `git commit --allow-empty -m "test bad format"` → reject ✅
+2. Test good commit `feat(infra): hello commitlint` → pass ✅, sau đó reset
+3. actionlint Docker validate ci.yml → exit 0 ✅
+4. PR #3 mở → CI workflow chạy lần đầu trên GitHub → pass ✅
+5. User merge PR
+
+### Kết quả cuối cùng
+
+- Commit: `897cbe7` — `chore(infra): add commitlint, husky, lint-staged, PR template, CI`
+- Merge: `2bcb61d` — PR #3
+- Branch deleted local + remote
+- CI pass lần đầu trên GitHub Actions
+- Test: 5/5 acceptance criteria pass
+
+### Bài học rút ra
+
+- **AI có thể catch lỗi user khi có context user không nhớ** (vd: git log
+  history). 3-vòng workflow nên cho phép AI push back 2 chiều.
+- **Scope enum design:** tránh trùng tên với conventional commit types
+  (test/fix/chore/docs/feat/style/refactor/perf/build/ci/revert).
+- **CI credentials phải tách bạch dev/staging/prod/CI** — không reuse,
+  ngay từ MVP.
+- **Verify hooks bằng test thật**, không chỉ check file tồn tại. Bad case
+  - good case + reset.
+- **Ngày 1 hoàn tất:** T-001 → T-004. Foundation sẵn sàng cho ngày 2 (auth
+  - branches + employees + trust score + attendance core).
+
+---
+
+<!-- Thêm entry mới ở dưới đây -->
+
+## [#06] <Next: T-005 Auth module>
+
 - **Date:**
 - **Tool:**
 - **Module:**
@@ -407,7 +588,9 @@ SEED_NAMESPACE — generate fresh, KHÔNG dùng UUID từ ví dụ
 ### Mục tiêu
 
 ### Prompt
+
 ```
+
 ```
 
 ### AI sinh ra
