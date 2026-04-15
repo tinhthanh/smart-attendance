@@ -94,12 +94,30 @@ model User {
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")
 
-  employee  Employee?
-  userRoles UserRole[]
-  auditLogs AuditLog[]
+  employee      Employee?
+  userRoles     UserRole[]
+  auditLogs     AuditLog[]
+  refreshTokens RefreshToken[]
 
   @@index([status])
   @@map("users")
+}
+
+model RefreshToken {
+  id         String    @id @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  issuedAt   DateTime  @default(now()) @map("issued_at")
+  expiresAt  DateTime  @map("expires_at")
+  revokedAt  DateTime? @map("revoked_at")
+  replacedBy String?   @map("replaced_by") @db.Uuid
+  userAgent  String?   @map("user_agent")
+  ipAddress  String?   @map("ip_address")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
 }
 
 model Role {
