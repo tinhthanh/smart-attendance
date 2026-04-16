@@ -50,6 +50,10 @@
     "serve": {
       "continuous": true,
       "executor": "@angular/build:dev-server",
+      "options": {
+        "port": 8100,
+        "proxyConfig": "apps/mobile/proxy.conf.json"
+      },
       "configurations": {
         "production": {
           "buildTarget": "mobile:build:production"
