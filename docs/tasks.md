@@ -1007,6 +1007,16 @@ KHÔNG sửa bug P2 nếu hết thời gian — log lại trong KNOWN_ISSUES.md.
 - ngx-translate
 - Mặc định tiếng Việt
 
+## T-B05 — Playwright e2e smoke 🟢
+
+- Setup: `pnpm nx g @nx/playwright:configuration --project=mobile-e2e` + portal-e2e
+- Mock GPS + permission via `page.context().setGeolocation` / `permissions: ['geolocation']`
+- Smoke flows:
+  - **Portal:** login admin → branches list → create branch → logout
+  - **Mobile:** login employee → check-in success (GPS HCM) → check-in fail (GPS HN)
+- Run trong CI sau lint/test/build (headless Chromium only, multi-browser deferred)
+- Chosen Day 3 over manual-only — defer to Day 5 (T-020 sweep slot)
+
 ---
 
 # 📊 Bảng tổng hợp tasks
