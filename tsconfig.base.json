@@ -24,6 +24,7 @@
       "@smart-attendance/api/branches": ["libs/api/branches/src/index.ts"],
       "@smart-attendance/api/common": ["libs/api/common/src/index.ts"],
       "@smart-attendance/api/employees": ["libs/api/employees/src/index.ts"],
+      "@smart-attendance/api/jobs": ["libs/api/jobs/src/index.ts"],
       "@smart-attendance/shared/constants": [
         "libs/shared/constants/src/index.ts"
       ],
