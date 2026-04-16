@@ -12,6 +12,9 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     })
   );
+  // Forward SIGTERM/SIGINT through Nest lifecycle so @nestjs/bullmq WorkerHost
+  // classes close Redis connections cleanly and in-flight HTTP requests drain.
+  app.enableShutdownHooks();
   const port = process.env.API_PORT ?? 3000;
   await app.listen(port);
   Logger.log(
