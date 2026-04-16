@@ -1,0 +1,44 @@
+# Dependencies & build artifacts
+**/node_modules
+**/dist
+**/.nx
+**/.angular
+**/.cache
+**/coverage
+**/test-output
+**/tmp
+
+# VCS / IDE
+.git
+.gitignore
+.github
+.vscode
+.idea
+
+# Logs
+*.log
+
+# Secrets — never bake into image
+.env
+.env.*
+!.env.example
+
+# Compose configs (Docker doesn't need these inside build context)
+docker-compose.yml
+docker-compose.*.yml
+
+# Tests
+**/*.spec.ts
+**/*.e2e-spec.ts
+
+# Docs (image doesn't need them; CLAUDE.md kept for reference if any tooling reads it)
+docs/
+README.md
+PROMPT_LOG.md
+ASSIGNMENT.md
+*.md
+!CLAUDE.md
+
+# Local-only tooling
+.claude
+.husky
