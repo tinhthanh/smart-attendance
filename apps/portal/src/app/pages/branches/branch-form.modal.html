@@ -1,0 +1,77 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>{{ isEdit ? 'Sửa chi nhánh' : 'Tạo chi nhánh' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="onCancel()">Hủy</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <ion-item>
+      <ion-input
+        label="Mã chi nhánh"
+        labelPlacement="floating"
+        formControlName="code"
+        placeholder="HCM-Q1"
+        helperText="Chữ hoa, số, dấu gạch ngang"
+      ></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-input
+        label="Tên"
+        labelPlacement="floating"
+        formControlName="name"
+      ></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-input
+        label="Địa chỉ"
+        labelPlacement="floating"
+        formControlName="address"
+      ></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-input
+        label="Vĩ độ (latitude)"
+        labelPlacement="floating"
+        type="number"
+        formControlName="latitude"
+      ></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-input
+        label="Kinh độ (longitude)"
+        labelPlacement="floating"
+        type="number"
+        formControlName="longitude"
+      ></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-input
+        label="Bán kính (m) 50-1000"
+        labelPlacement="floating"
+        type="number"
+        formControlName="radius_meters"
+      ></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-input
+        label="Múi giờ"
+        labelPlacement="floating"
+        formControlName="timezone"
+      ></ion-input>
+    </ion-item>
+    <br />
+    <ion-button
+      expand="block"
+      type="submit"
+      [disabled]="form.invalid || loading()"
+    >
+      @if (loading()) {
+      <ion-spinner name="crescent"></ion-spinner>
+      } @else { {{ isEdit ? 'Lưu thay đổi' : 'Tạo' }} }
+    </ion-button>
+  </form>
+</ion-content>

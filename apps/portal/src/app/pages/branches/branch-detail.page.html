@@ -1,0 +1,198 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/branches"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      @if (branch(); as b) { {{ b.code }} — {{ b.name }} }
+    </ion-title>
+    @if (isAdmin()) {
+    <ion-buttons slot="end">
+      <ion-button (click)="openEdit()">
+        <ion-icon slot="start" name="create-outline"></ion-icon>
+        Sửa
+      </ion-button>
+    </ion-buttons>
+    }
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment [value]="activeTab()" (ionChange)="onTabChange($event)">
+      <ion-segment-button value="info">
+        <ion-label>Thông tin</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="wifi">
+        <ion-label>WiFi</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="geofence">
+        <ion-label>Geofence</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (loading()) {
+  <ion-spinner name="crescent"></ion-spinner>
+  } @else if (branch(); as b) { @if (activeTab() === 'info') {
+  <ion-list>
+    <ion-item
+      ><ion-label
+        ><h3>Mã</h3>
+        <p>{{ b.code }}</p></ion-label
+      ></ion-item
+    >
+    <ion-item
+      ><ion-label
+        ><h3>Tên</h3>
+        <p>{{ b.name }}</p></ion-label
+      ></ion-item
+    >
+    <ion-item
+      ><ion-label
+        ><h3>Địa chỉ</h3>
+        <p>{{ b.address || '-' }}</p></ion-label
+      ></ion-item
+    >
+    <ion-item
+      ><ion-label
+        ><h3>Vị trí</h3>
+        <p>{{ b.latitude }}, {{ b.longitude }}</p></ion-label
+      ></ion-item
+    >
+    <ion-item
+      ><ion-label
+        ><h3>Bán kính</h3>
+        <p>{{ b.radius_meters }} m</p></ion-label
+      ></ion-item
+    >
+    <ion-item
+      ><ion-label
+        ><h3>Múi giờ</h3>
+        <p>{{ b.timezone }}</p></ion-label
+      ></ion-item
+    >
+    <ion-item>
+      <ion-label><h3>Trạng thái</h3></ion-label>
+      <ion-chip [color]="b.status === 'active' ? 'success' : 'medium'">
+        <ion-label
+          >{{ b.status === 'active' ? 'Hoạt động' : 'Ngừng' }}</ion-label
+        >
+      </ion-chip>
+    </ion-item>
+  </ion-list>
+  } @if (activeTab() === 'wifi') {
+  <h3>Cấu hình WiFi</h3>
+  @if (wifiConfigs().length === 0) {
+  <ion-text color="medium">Chưa có WiFi nào</ion-text>
+  } @else {
+  <ion-list>
+    @for (w of wifiConfigs(); track w.id) {
+    <ion-item>
+      <ion-label>
+        <h2>{{ w.ssid }}</h2>
+        <p>BSSID: {{ w.bssid || '(không có)' }} — Priority: {{ w.priority }}</p>
+      </ion-label>
+      @if (isAdmin()) {
+      <ion-button
+        slot="end"
+        color="danger"
+        fill="clear"
+        (click)="removeWifi(w)"
+      >
+        <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+      </ion-button>
+      }
+    </ion-item>
+    }
+  </ion-list>
+  } @if (isAdmin()) {
+  <br />
+  <h4>Thêm WiFi mới</h4>
+  <form [formGroup]="wifiForm" (ngSubmit)="addWifi()">
+    <ion-item
+      ><ion-input
+        label="SSID"
+        labelPlacement="floating"
+        formControlName="ssid"
+      ></ion-input
+    ></ion-item>
+    <ion-item
+      ><ion-input
+        label="BSSID (aa:bb:cc:dd:ee:ff)"
+        labelPlacement="floating"
+        formControlName="bssid"
+      ></ion-input
+    ></ion-item>
+    <ion-item
+      ><ion-input
+        label="Priority"
+        labelPlacement="floating"
+        type="number"
+        formControlName="priority"
+      ></ion-input
+    ></ion-item>
+    <br />
+    <ion-button expand="block" type="submit" [disabled]="wifiForm.invalid"
+      >Thêm</ion-button
+    >
+  </form>
+  } } @if (activeTab() === 'geofence') {
+  <h3>Geofences</h3>
+  @if (geofences().length === 0) {
+  <ion-text color="medium">Chưa có geofence nào</ion-text>
+  } @else {
+  <ion-list>
+    @for (g of geofences(); track g.id) {
+    <ion-item>
+      <ion-label>
+        <h2>{{ g.name }}</h2>
+        <p>
+          {{ g.center_lat }}, {{ g.center_lng }} — bán kính {{ g.radius_meters
+          }}m
+        </p>
+      </ion-label>
+    </ion-item>
+    }
+  </ion-list>
+  } @if (isAdmin()) {
+  <br />
+  <h4>Thêm Geofence</h4>
+  <form [formGroup]="geofenceForm" (ngSubmit)="addGeofence()">
+    <ion-item
+      ><ion-input
+        label="Tên"
+        labelPlacement="floating"
+        formControlName="name"
+      ></ion-input
+    ></ion-item>
+    <ion-item
+      ><ion-input
+        label="Vĩ độ"
+        labelPlacement="floating"
+        type="number"
+        formControlName="center_lat"
+      ></ion-input
+    ></ion-item>
+    <ion-item
+      ><ion-input
+        label="Kinh độ"
+        labelPlacement="floating"
+        type="number"
+        formControlName="center_lng"
+      ></ion-input
+    ></ion-item>
+    <ion-item
+      ><ion-input
+        label="Bán kính (m) 10-2000"
+        labelPlacement="floating"
+        type="number"
+        formControlName="radius_meters"
+      ></ion-input
+    ></ion-item>
+    <br />
+    <ion-button expand="block" type="submit" [disabled]="geofenceForm.invalid"
+      >Thêm</ion-button
+    >
+  </form>
+  } } }
+</ion-content>

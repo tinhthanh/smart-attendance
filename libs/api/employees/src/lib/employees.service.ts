@@ -56,7 +56,6 @@ export class EmployeesService {
           'Branch not found'
         );
       }
-      where.OR = [...((where.OR as Prisma.EmployeeWhereInput[]) ?? [])];
       where.primaryBranchId = branch_id;
     } else if (scopeIds) {
       where.primaryBranchId = {
