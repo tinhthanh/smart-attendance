@@ -94,6 +94,11 @@ Mỗi entry theo format:
 - **Angular 17+ functional guards/interceptors** default mới, class pattern legacy (xem #11)
 - **Jest + Ionic ESM**: `transformIgnorePatterns` phải whitelist `@ionic|@stencil|ionicons` (xem #11)
 - **FE types duplicate > shared từ BE libs** — giảm coupling, giữ FE build độc lập (xem #11)
+- **Manual browser test catch bugs unit test miss** — race condition + stateful queries (xem #12)
+- **Prisma `OR: []` = always false** — đừng tạo empty array operators (xem #12)
+- **Angular bootstrap: `APP_INITIALIZER` > `ngOnInit`** cho async setup phụ thuộc router/guard (xem #12)
+- **Angular CLI budget quá strict cho Ionic** — set realistic baseline 1.5mb/2mb từ đầu (xem #12)
+- **Backend curl test pinpoint FE vs BE bug** — verify API trước khi blame FE (xem #12)
 - (thêm dần khi gặp)
 
 ---
@@ -1285,7 +1290,115 @@ Sau exec: manual browser test 7 items, user verify trước khi commit.
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#12] <Next: T-011 Portal CRUD UI>
+## [#12] T-011 — Portal Branches + Employees CRUD UI + 4 bug fixes
+
+- **Date:** 2026-04-16
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** portal
+- **Phase:** feature (frontend lớn nhất Day 3)
+
+### Mục tiêu
+
+5 pages CRUD + 2 form modals + 2 API services + main layout với ion-split-pane. Manager scope visual badge. URL query params 2-way sync. Vietnamese error mapping cho 17 error codes.
+
+### Prompt
+
+Workflow 3 vòng + browser test bắt buộc.
+
+**Vòng 1 — Plan + 10 decisions:**
+
+```
+T-011 Portal CRUD UI. Plan: layout với ion-split-pane, 2 API services,
+5 pages, 2 modals, manager scope visual badge.
+10 decisions với recommend.
+```
+
+**Vòng 2 — Approve + 3 refinements + 2 questions:**
+
+```
+Approve 10/10 + 5 extras.
+R1. Manager scope BADGE explicit "Chỉ xem chi nhánh được phân công"
+R2. URL query params 2-way sync với router subscribe
+R3. NO unit test cho FE component, manual browser BẮT BUỘC
+Q1. Manager forbidden URL → toast + redirect /branches
+Q2. Modal network drop → giữ data, toast error, không close
+```
+
+### AI sinh ra
+
+- **layout/main.layout.ts** — ion-split-pane shell + side menu responsive
+- **5 pages** + **2 modals** (branches + employees CRUD)
+- **2 API services** trong `core/`
+- **error-toast.util.ts** — 17 error codes mapped to VN
+- **URL query params 2-way sync** — bookmarkable filter state
+- 14 manual test cases cho user verify
+
+### Vấn đề phát hiện khi review
+
+**Bug #1 (case 9): F5 → bị bắt login lại**
+
+- **Root cause:** `App.ngOnInit().initFromStorage()` async, `authGuard.isAuthenticated()` check sync ngay → race condition
+- Guard thấy `_user=null` → redirect /login TRƯỚC khi initFromStorage hoàn thành
+- **Fix:** chuyển `initFromStorage` sang `APP_INITIALIZER` (block bootstrap đến khi /me resolve)
+- **Lesson:** Angular bootstrap order — `APP_INITIALIZER` cho async setup phải hoàn thành TRƯỚC router/guard.
+
+**Bug #2 (case 11): Manager paste forbidden URL → bị bắt login lại**
+
+- Cùng race condition như #1 (paste URL = full page reload)
+- Auto-fixed khi #1 fix
+- **Lesson:** "F5" và "paste URL" cùng full reload — cùng race condition.
+
+**Bug #3 (case 12): Admin filter HCM-Q1 → empty list**
+
+- **Root cause:** `libs/api/employees/employees.service.ts` line:
+  `where.OR = [...((where.OR as Prisma.EmployeeWhereInput[]) ?? [])];`
+- Khi không có search nhưng có branch_id → `where.OR = []` (empty array)
+- **Prisma interpret `OR: []` = match nothing** (always-false condition)
+- **Fix:** xóa dòng tạo empty OR array
+- **Lesson critical:** Prisma `OR: []` ≠ no condition — nó là always-false. Đừng tạo empty OR/AND/NOT arrays.
+
+**Bug #4 (CI): Production bundle vượt budget 1MB**
+
+- CI build fail: `bundle initial 1.10 MB exceeded 1 MB error budget`
+- **Root cause:** Ionic + Angular standalone + 5 pages + 2 modals → 1.10 MB
+- **Fix:** Bump budget initial 500kb/1mb → 1.5mb/2mb (pragmatic cho MVP)
+- **Lesson:** Angular CLI default budget phù hợp vanilla; Ionic apps cần bump baseline ngay từ đầu để tránh CI surprise.
+
+### Cách chỉnh sửa
+
+1. AI exec → in 14 test cases cho user verify
+2. User browser test → 3 bug found
+3. Tôi (assistant) debug:
+   - Read app.config + auth.service + employees.service
+   - Test backend với curl trực tiếp (xác nhận 0 employees với HCM filter)
+   - Identify Prisma `OR: []` bug
+4. Apply 3 fixes (`APP_INITIALIZER` + remove OR + cleanup app.ts)
+5. User re-test → all pass
+6. Commit `736bc6f` → CI fail (bundle budget) → fix `680d6f6` → CI pass → merge
+
+### Kết quả cuối cùng
+
+- Commits:
+  - `736bc6f` — `feat(portal): add branches + employees CRUD UI with manager scope`
+  - `680d6f6` — `fix(portal): bump production budget for Ionic + Angular bundle size`
+- Merge: `9656ef8` — PR #10
+- Test: 14/14 manual browser + portal/employees tests pass + CI pass
+- 4 bugs caught + fixed (3 logic + 1 build config)
+
+### Bài học rút ra
+
+- **Manual browser test catch bugs unit test miss** — F5 race + Prisma OR=[] không thể catch bằng unit test (cần stateful render + actual DB query).
+- **Prisma `OR: []` = always false**, KHÔNG phải "no condition". Đừng tạo empty array operators.
+- **Angular bootstrap order: `APP_INITIALIZER` > `ngOnInit`** cho async setup phụ thuộc router/guard.
+- **F5 và paste URL = cùng full reload** → cùng race condition.
+- **Angular CLI default budget quá strict cho Ionic** — set realistic baseline ngay từ đầu.
+- **Backend curl test giúp pinpoint bug FE vs BE** — xác nhận 0 employees từ API trước khi nghĩ FE filter sai.
+
+---
+
+<!-- Thêm entry mới ở dưới đây -->
+
+## [#13] <Next: T-012 Mobile check-in/out>
 
 - **Date:**
 - **Tool:**
