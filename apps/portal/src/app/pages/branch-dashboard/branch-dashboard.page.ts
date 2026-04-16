@@ -27,6 +27,7 @@ import { NgApexchartsModule } from 'ng-apexcharts';
 import { firstValueFrom } from 'rxjs';
 import { DashboardApiService } from '../../core/dashboard/dashboard.api.service';
 import { showErrorToast } from '../../core/util/error-toast.util';
+import { RiskFlagChipComponent } from '../../shared/components/risk-flag-chip.component';
 import { BranchDashboard } from '../../shared/types/dashboard.types';
 
 @Component({
@@ -55,6 +56,7 @@ import { BranchDashboard } from '../../shared/types/dashboard.types';
     IonBadge,
     IonText,
     IonSpinner,
+    RiskFlagChipComponent,
   ],
   templateUrl: './branch-dashboard.page.html',
 })

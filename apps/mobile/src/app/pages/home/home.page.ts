@@ -38,6 +38,10 @@ import { NetworkService } from '../../core/capacitor/network.service';
 import { WifiService } from '../../core/capacitor/wifi.service';
 import { CheckinApiService } from '../../core/checkin/checkin.api.service';
 import {
+  getRiskFlagInfo,
+  pickPrimaryFlag,
+} from '@smart-attendance/shared/constants';
+import {
   errorMessage,
   flagMessage,
   showErrorToast,
@@ -256,12 +260,27 @@ export class HomePage {
   }
 
   private async showFailDialog(flags: string[], distance?: number) {
-    const reasons = flags
-      .map((f) => '• ' + flagMessage(f, distance))
-      .join('<br>');
+    const primary = pickPrimaryFlag(flags);
+    const primaryInfo = primary ? getRiskFlagInfo(primary) : null;
+
+    const subHeader = primaryInfo?.label_vi;
+    const primaryLine = primary
+      ? flagMessage(primary, distance)
+      : 'Vui lòng thử lại';
+    const secondary = flags
+      .filter((f) => f !== primary)
+      .map((f) => '• ' + getRiskFlagInfo(f).label_vi);
+
+    const message =
+      primaryLine +
+      (secondary.length > 0
+        ? `<br><br><strong>Cờ khác:</strong><br>${secondary.join('<br>')}`
+        : '');
+
     const a = await this.alert.create({
       header: 'Không thể chấm công',
-      message: reasons || 'Vui lòng thử lại',
+      subHeader,
+      message,
       buttons: [{ text: 'Đã hiểu', role: 'cancel' }],
     });
     await a.present();
