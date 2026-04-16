@@ -63,6 +63,20 @@ export const appRoutes: Route[] = [
             (m) => m.SessionDetailPage
           ),
       },
+      {
+        path: 'dashboard/branch/:id',
+        loadComponent: () =>
+          import('./pages/branch-dashboard/branch-dashboard.page').then(
+            (m) => m.BranchDashboardPage
+          ),
+      },
+      {
+        path: 'anomalies',
+        loadComponent: () =>
+          import('./pages/anomalies/anomalies.page').then(
+            (m) => m.AnomaliesPage
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: 'dashboard' },

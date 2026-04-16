@@ -18,6 +18,7 @@ import {
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
+  alertCircleOutline,
   businessOutline,
   homeOutline,
   logOutOutline,
@@ -31,6 +32,7 @@ addIcons({
   'business-outline': businessOutline,
   'people-outline': peopleOutline,
   'time-outline': timeOutline,
+  'alert-circle-outline': alertCircleOutline,
   'log-out-outline': logOutOutline,
 });
 

@@ -13,7 +13,7 @@ export default {
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@ionic|@stencil|ionicons|.*\\.mjs$))',
+    'node_modules/(?!(@ionic|@stencil|ionicons|apexcharts|ng-apexcharts|.*\\.mjs$))',
   ],
   snapshotSerializers: [
     'jest-preset-angular/build/serializers/no-ng-attributes',
