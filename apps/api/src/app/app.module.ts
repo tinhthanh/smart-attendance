@@ -8,6 +8,7 @@ import {
   RolesGuard,
 } from '@smart-attendance/api/auth';
 import { BranchesModule } from '@smart-attendance/api/branches';
+import { EmployeesModule } from '@smart-attendance/api/employees';
 import {
   CommonModule,
   HttpExceptionFilter,
@@ -28,6 +29,7 @@ import { envValidationSchema } from './env.validation';
     CommonModule,
     AuthModule,
     BranchesModule,
+    EmployeesModule,
   ],
   controllers: [AppController],
   providers: [

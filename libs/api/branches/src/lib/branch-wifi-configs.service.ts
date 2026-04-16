@@ -7,7 +7,7 @@ import {
 } from '@smart-attendance/api/common';
 import { CreateWifiConfigDto } from './dto/create-wifi-config.dto';
 import { BranchesService, RequestCtx } from './branches.service';
-import { UserRolesContext, isAdmin } from './branch-scope.helper';
+import { UserRolesContext, isAdmin } from '@smart-attendance/api/common';
 
 @Injectable()
 export class BranchWifiConfigsService {

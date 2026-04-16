@@ -8,3 +8,4 @@ export * from './lib/http-exception.filter';
 export * from './lib/dto/pagination.dto';
 export * from './lib/types/api-response.type';
 export * from './lib/pagination.util';
+export * from './lib/branch-scope.helper';
