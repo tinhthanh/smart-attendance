@@ -99,6 +99,11 @@ Mỗi entry theo format:
 - **Angular bootstrap: `APP_INITIALIZER` > `ngOnInit`** cho async setup phụ thuộc router/guard (xem #12)
 - **Angular CLI budget quá strict cho Ionic** — set realistic baseline 1.5mb/2mb từ đầu (xem #12)
 - **Backend curl test pinpoint FE vs BE bug** — verify API trước khi blame FE (xem #12)
+- **AI verify dependency availability TRƯỚC commit** — tránh promise rồi fallback (xem #13)
+- **UX expectation align với business logic** — limitation document, không phải bug (xem #13)
+- **Auth pattern stable = template chung** — đáng investment khi reuse 3+ lần (xem #13)
+- **Platform abstraction qua service** — graceful web vs native fallback (xem #13)
+- **Pattern reuse + lessons applied = CI pass first try** — T-012 không CI fail (xem #13)
 - (thêm dần khi gặp)
 
 ---
@@ -1398,7 +1403,123 @@ Q2. Modal network drop → giữ data, toast error, không close
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#13] <Next: T-012 Mobile check-in/out>
+## [#13] T-012 — Mobile check-in/out screen với GPS + tabs
+
+- **Date:** 2026-04-16
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** mobile
+- **Phase:** feature (Capacitor + permission flow)
+
+### Mục tiêu
+
+App mobile cho nhân viên check-in/out qua GPS, history, profile. Capacitor 8 plugins. Tab navigation. Vietnamese UX. WiFi plugin investigated nhưng skip vì ecosystem abandoned.
+
+### Prompt
+
+Workflow 3 vòng + browser test với Chrome DevTools mock GPS.
+
+**Vòng 1 — Plan + 10 decisions:**
+
+```
+T-012 Mobile check-in/out. Capacitor plugins, permission flow, tab structure,
+trust score badge, 10 decisions. Quan trọng: không trust mock_location từ
+client (chỉ flag). Test web mode đủ cho acceptance.
+```
+
+**Vòng 2 — Approve + 3 refinements + 3 lưu ý:**
+
+```
+Approve 10/10 + 4 extras.
+R1. Trust score limitation document (mobile cap ~55 yellow without WiFi)
+R2. Demo data setup với coordinates cụ thể (HCM 10.7769,106.7009 / HN 21.0,105.85)
+R3. Tab bar layout với ion-tabs + ion-tab-bar slot="bottom"
+L1-L3. Web mode permission notes (HTTPS not required for localhost,
+  Network plugin OK trên web, Device.getId() fallback UUID lưu Preferences)
+```
+
+### AI sinh ra
+
+- **4 Capacitor plugins** pinned: Geolocation, Device, Network, Preferences
+- **WiFi plugin SKIPPED** (research thật: no viable Capacitor 8 option)
+  - `wifi.service.ts` stub return null + comment giải thích
+- **Mobile app structure** (mirror T-010 portal):
+  - core/{auth, api, capacitor, checkin, util}
+  - 4 pages (login, home, history, profile)
+  - tabs.layout với bottom tab bar
+- **Vietnamese error mapping**: 13 codes + 7 risk_flag messages
+- **Cleanup**: xóa nx-welcome.ts + app.html + app.scss (boilerplate)
+- **Jest fix**: transformIgnorePatterns whitelist Ionic ESM (T-010 pattern)
+- Manual browser test 9/9 pass
+
+### Vấn đề phát hiện khi review
+
+**Insight #1: AI tự research ecosystem trước khi commit dependency**
+
+- Plan ban đầu propose `@capacitor-community/wifi` cho WiFi
+- AI tự verify npm install → 404 / abandoned package
+- Decision: skip WiFi, document rõ trade-off (trust score cap ~55)
+- **Lesson:** AI nên verify dependency availability TRƯỚC khi promise feature. Tránh hứa rồi phải fallback giữa task.
+
+**Insight #2: Trust score cap thấp ≠ bug, là spec limitation**
+
+- Mobile check-in chỉ có GPS → max score 55 (review/yellow), không bao giờ trusted (xanh ≥70)
+- AI phát hiện và document rõ trong commit + plan
+- Backend KHÔNG cần thay đổi weights — đây là expected behavior
+- **Lesson:** UX expectation phải align với business logic. Nếu mobile-only luôn yellow, user không nên hoang mang — đây là design constraint, không phải bug.
+
+**Insight #3: Pattern reuse từ T-010 = velocity tăng**
+
+- Mobile auth flow tái dùng 100% pattern T-010 portal:
+  - APP_INITIALIZER (đã learn từ T-011 bug fix)
+  - Functional interceptor + guard
+  - Signal-based state
+  - Vietnamese error mapping
+- Khác biệt: token storage dùng `@capacitor/preferences` (native secure) thay vì `localStorage`
+- **Lesson:** auth pattern stable đáng đầu tư template chung — 3 lần reuse rồi (T-005 backend, T-010 portal, T-012 mobile).
+
+**Insight #4: Platform-specific abstraction qua service**
+
+- `device.service.ts`: `Device.getId()` native, fallback UUID v4 lưu Preferences trên web
+- `wifi.service.ts`: stub trả null trên cả native + web (no plugin)
+- `geolocation.service.ts`: Capacitor API hoạt động đồng nhất web + native
+- **Lesson:** abstraction qua service layer cho phép platform fallback gracefully — không hardcode platform check trong page logic.
+
+**Insight #5: Defer e2e test discipline để Day 5**
+
+- User question về Playwright e2e
+- Trade-off analysis: Option A (manual only), B (NOW), C (Day 5 sweep)
+- Choose Option C — feature first, e2e nice-to-have cuối
+- T-B05 added vào tasks.md để không quên
+- **Lesson:** test infrastructure decision dựa vào time budget — không phải "always yes" hay "always no". Document trade-off trong tasks.
+
+### Cách chỉnh sửa
+
+1. AI exec với pattern T-010 + new mobile-specific code
+2. Manual test 9 cases (DevTools mock GPS + 2 location coords)
+3. User pass all 9 → commit `0fba3db` → CI pass → merge
+4. Không bug nào caught trong T-012 — pattern T-010/T-011 lessons đã apply trước (APP_INITIALIZER, Jest Ionic ESM)
+
+### Kết quả cuối cùng
+
+- Commit: `0fba3db` — `feat(mobile): add check-in/out screen with GPS + tabs + history`
+- Merge: `d2018e2` — PR #11
+- Branch deleted
+- Test: 1 smoke + manual 9/9 + CI pass first try
+
+### Bài học rút ra
+
+- **AI verify dependency availability TRƯỚC commit** — tránh promise feature rồi fallback giữa task.
+- **UX expectation align với business logic** — mobile-only yellow badge không phải bug, document để user hiểu.
+- **Auth pattern stable đáng template chung** — 3 lần reuse rồi (T-005/T-010/T-012).
+- **Platform abstraction qua service** — graceful fallback web vs native.
+- **Test infrastructure decision dựa vào time budget**, document trade-off trong tasks.
+- **Pattern reuse + lessons applied = CI pass first try** (T-012 không có CI fail nào, khác T-010/T-011).
+
+---
+
+<!-- Thêm entry mới ở dưới đây -->
+
+## [#14] <Next: T-013 History views portal>
 
 - **Date:**
 - **Tool:**
