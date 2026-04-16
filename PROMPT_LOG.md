@@ -107,6 +107,11 @@ Mỗi entry theo format:
 - **Default filter cho list endpoints với nhiều records** — tránh load all (xem #14)
 - **Destructive/audit-impact action cần preview + warning UX** — không chỉ button click (xem #14)
 - **Environment gotcha document** — Mac sleep/wake port conflict, future smoke không stuck (xem #14)
+- **Rules cứng cần exception clear khi use case hợp lý** — raw SQL cho analytics (xem #15)
+- **Hybrid scheduling (timer + queue) > single tool** — separation timing vs retry/persistence (xem #15)
+- **Idempotency 2 layers (queue + DB) = belt-and-suspenders** (xem #15)
+- **Dependent cron jobs cần coordination filter** — race condition silent killer (xem #15)
+- **Scope enum locked → plan sớm hoặc semantic remap** (xem #15)
 - (thêm dần khi gặp)
 
 ---
@@ -1632,7 +1637,126 @@ R3. Empty states VN cho list + detail 404
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#15] <Next: Day 4 — T-014 Cron jobs (BullMQ)>
+## [#15] T-014 — BullMQ cron jobs (daily summary + missing checkout + anomaly)
+
+- **Date:** 2026-04-16
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** attendance / jobs
+- **Phase:** feature (Day 4 start)
+
+### Mục tiêu
+
+3 scheduled jobs theo `docs/spec.md §4.3 §4.4 §8.4`. Hybrid `@nestjs/schedule` (timing) + BullMQ (retry/dedup). Manual trigger admin endpoint cho dev test + catch-up. Anomaly aggregation dùng raw SQL (analytics exception).
+
+### Prompt
+
+Workflow 3 vòng + 1 push back về raw SQL exception.
+
+**Vòng 1 — Plan + 10 decisions:**
+
+```
+T-014 Cron jobs với BullMQ. Plan: dependencies, module structure, 3 jobs
+logic, manual trigger endpoint, queue config, unit tests.
+10 decisions với recommend.
+Ràng buộc: KHÔNG setInterval, KHÔNG sync main thread, idempotent,
+logger per job, timezone aware.
+```
+
+**Vòng 2 — Approve + raw SQL exception (a) + 6 refinements:**
+
+```
+Approve 10/10 + 4 extras.
+Open concern → chọn (a): Accept raw SQL exception cho anomaly.
+3 ràng buộc cứng: R1 parameterize, R2 typed results, R3 test với
+mocked queryRaw.
+3 refinements thêm: R4 detailed response, R5 daily/missing coordination,
+R6 double-safe idempotency.
+```
+
+### AI sinh ra
+
+- **`libs/api/jobs`** (12 files): module + scheduler + 3 processors + admin controller + DTOs + 3 specs + queues constants + date util
+- **3 deps pinned**: @nestjs/bullmq@11.0.4, bullmq@5.74.1, @nestjs/schedule@6.1.3
+- **3 cron jobs** với jobId pattern `{name}-{YYYY-MM-DD}` (BullMQ dedup)
+- **Manual trigger** endpoint `POST /admin/jobs/:name/run` (admin only, hidden from Swagger)
+- **Anomaly raw SQL** với 3 typed result interfaces + tagged template literals
+- 10/10 unit tests + 5/5 smoke pass
+
+### Vấn đề phát hiện khi review
+
+**Insight #1: Raw SQL exception cho analytics — document policy, không hack**
+
+- CLAUDE.md §8 nói "NO raw SQL — Prisma only" — strict cho CRUD
+- Anomaly aggregation cần CTE + GROUP BY HAVING → Prisma findMany + JS aggregate sẽ slow + memory bloat (35k rows)
+- Solution: chấp nhận raw SQL có scope giới hạn cho analytics + 3 hard constraints (R1-R3)
+- Plan committed update CLAUDE.md §8 sau merge: "Raw SQL allowed for analytics aggregation only (CTE, window functions). CRUD must use Prisma."
+- **Lesson:** rules cứng (§8 "no raw SQL") cần exception clear khi gặp use case hợp lý. Document exception > hack workaround. AI tự đề xuất scope-limited exception là pattern tốt.
+
+**Insight #2: Hybrid scheduling = clean separation of concerns**
+
+- @nestjs/schedule @Cron triggers → enqueue BullMQ job → processor handles
+- Schedule = WHEN (timing logic), Queue = HOW (retry, observability, idempotency, persistence)
+- Tránh single tool làm cả hai → tránh limit
+- **Lesson:** scheduled background work nên dùng pattern hybrid timer + queue. Một tool làm cả hai (vd: BullMQ repeatable) sacrifice flexibility.
+
+**Insight #3: Double-safe idempotency = belt-and-suspenders**
+
+- BullMQ jobId `daily-summary-2026-04-14` → BullMQ skip duplicate enqueue
+- DB `@@unique(employeeId, workDate)` upsert → DB skip duplicate row
+- Either layer fail → other layer catch
+- Verified: chạy 2 lần → counts identical (31 rows, không tăng)
+- **Lesson:** background job idempotency cần 2 layer (queue + DB). Single layer bug → silent duplicate, khó debug.
+
+**Insight #4: Daily/missing checkout coordination prevents race**
+
+- Daily summary chạy 00:30 (sau missing checkout 23:59 đêm trước)
+- Nếu missing checkout chậm → daily summary có thể aggregate session chưa close
+- Solution: daily summary filter `checkOutAt IS NOT NULL OR status IN ('missing_checkout','absent')` → skip open sessions
+- **Lesson:** dependent cron jobs cần explicit coordination filter — không assume sequential execution. Race condition giữa cron jobs là silent killer.
+
+**Insight #5: Commitlint scope rejected `jobs` (không trong enum)**
+
+- Initial commit `feat(jobs):` → commitlint fail "scope must be one of [enum]"
+- Resolution: dùng `feat(attendance):` (semantic match — jobs aggregate attendance data)
+- **Lesson:** scope enum locked from T-004 — phải plan thêm scope nếu module mới có nhiều commit. Hoặc map về scope existing semantically. Cho `jobs`, dùng `attendance` OK vì cả 2 đều liên quan attendance domain.
+
+**Insight #6: Cache-manager Redis baseline issue (pre-existing T-009)**
+
+- AI phát hiện cache không persist tới Redis DB (chỉ in-memory in-process)
+- Pre-existing từ T-009, không phải T-014 regression
+- AI flag rõ trong commit message + plan
+- Anomaly cache vẫn work cho dashboard single-process, không survive restart
+- **Lesson:** AI tự audit dependency của task hiện tại + flag pre-existing issues. Không silently inherit bug.
+
+### Cách chỉnh sửa
+
+1. AI exec với 3 ràng buộc R1-R3 cho raw SQL
+2. Verify smoke 5/5: daily upsert idempotent, missing close 0, anomaly shape, RBAC 403
+3. Verify idempotency: chạy daily 2 lần → counts identical
+4. Commit lần 1 fail commitlint scope `jobs` → đổi `attendance` → commit pass
+5. PR #13 → CI pass → user merge
+
+### Kết quả cuối cùng
+
+- Commit: `355c241` — `feat(attendance): add BullMQ cron jobs for daily summary + checkout + anomaly`
+- Merge: `a05d1cd` — PR #13
+- Branch deleted
+- Test: 10/10 unit + 5/5 smoke + CI pass
+
+### Bài học rút ra
+
+- **Rules cứng cần exception clear khi gặp use case hợp lý** — document exception > hack workaround.
+- **Hybrid scheduling pattern (timer + queue) > single tool** — clean separation timing vs retry/persistence.
+- **Idempotency 2 layers (queue + DB) = belt-and-suspenders** — single layer bug silent.
+- **Dependent cron jobs cần explicit coordination filter** — race condition silent killer.
+- **Scope enum locked → plan scope mới sớm hoặc semantic remap** (jobs → attendance).
+- **AI tự audit pre-existing issues**, không silently inherit (cache-manager Redis baseline).
+
+---
+
+<!-- Thêm entry mới ở dưới đây -->
+
+## [#16] <Next: T-015 Dashboards admin + manager + anomaly>
 
 - **Date:**
 - **Tool:**
