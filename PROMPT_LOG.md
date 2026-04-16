@@ -134,6 +134,10 @@ Mỗi entry theo format:
 - **tini PID 1 BẮT BUỘC cho Node container long-running** — missing = stuck on restart (xem #19)
 - **Entrypoint script `exec "$@"` preserve PID 1** — without exec tini loses target (xem #19)
 - **Verify shutdown hooks TRƯỚC prod deploy** — bug chỉ hiện khi stop/restart (xem #19)
+- **Docs polish đầu tiên PHẢI grep TBD/placeholder** toàn project (xem #20)
+- **Neutral framing trade-offs > marketing** cho exam submission (xem #20)
+- **Known limitations transparent = điểm cộng** credibility (xem #20)
+- **Demo timing theo delivery type**: 100 wpm visual, 150 wpm voice (xem #20)
 - (thêm dần khi gặp)
 
 ---
@@ -2266,7 +2270,88 @@ V2. BullMQ graceful shutdown — follow-up nếu chưa wired
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#20] <Next: T-019 README polish + demo script>
+## [#20] T-019 — README polish + demo script + architecture doc
+
+- **Date:** 2026-04-16
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** docs
+- **Phase:** polish (Day 5 submission prep)
+
+### Mục tiêu
+
+README polish cho submission, create demo-script.md (10' video guide) + architecture.md (system + scale + trade-offs + limitations), update tasks.md status, spec.md v0.2 changelog.
+
+### Prompt
+
+Workflow 3 vòng gọn — task docs, 10 decisions recommend.
+
+**Vòng 1 — Plan + 10 decisions.**
+**Vòng 2 — Approve + 2 refinements (team placeholder + tasks status) + 2 verifications (CI badge + Mermaid).**
+
+### AI sinh ra
+
+- README.md updated: CI badge + 3 placeholders + Team table với HTML comment
+- docs/architecture.md (NEW, 142 lines): 6 sections
+- docs/demo-script.md (NEW, 207 lines): 6-phase 10'
+- docs/spec.md v0.2 changelog
+- docs/tasks.md +Status column
+
+### Vấn đề phát hiện khi review
+
+**Insight #1: AI pre-work grep TBD/placeholder toàn project**
+
+- 3 placeholders found (video, demo ref, team)
+- Không spot-later, grep upfront
+- **Lesson:** docs polish task đầu tiên phải grep TBD/placeholder/TODO/XXX toàn project.
+
+**Insight #2: Neutral framing > marketing language**
+
+- Trade-off 4-col table (decision | chosen | alt | why), không "we chose X because best"
+- Grader đọc nhận honest engineering thinking > hype
+- **Lesson:** submission docs NÊN neutral framing — let decisions speak.
+
+**Insight #3: Known limitations transparent = điểm cộng**
+
+- 7 limitations surfaced proactively
+- Hiding → grader discover → lose credibility
+- **Lesson:** "Known limitations" signal honest engineering, không phải điểm trừ.
+
+**Insight #4: Demo timing = 100 wpm visual vs 150 wpm voice**
+
+- 1008 words → 10' at 100 wpm (screen demo pace)
+- Backup: skip Phase 4 nếu overrun
+- **Lesson:** timing phải account delivery type.
+
+**Insight #5: Commitlint `docs:` scope-empty edge case**
+
+- Commit `docs:` fail → retry `docs(docs):` pass (awkward nhưng valid)
+- Alternative: add `readme`/`demo` scope
+- **Lesson:** scope enum cần cover edge cases hoặc relax rule.
+
+### Cách chỉnh sửa
+
+1. AI exec với 5 extras + 2 refinements
+2. Verify 5 items pass
+3. Commit 1st fail scope-empty → retry `docs(docs):` → push → PR → merge
+
+### Kết quả cuối cùng
+
+- Commit: `fdf6e11` — `docs(docs): polish README + add demo script + architecture doc`
+- Merge: `75d7570` — PR #18
+
+### Bài học rút ra
+
+- **Docs polish đầu tiên PHẢI grep TBD/TODO/placeholder** toàn project.
+- **Neutral framing trade-offs > marketing** cho exam submission.
+- **Known limitations transparent = điểm cộng** credibility.
+- **Demo timing theo delivery type**: 100 wpm visual, 150 wpm voice.
+- **Commitlint scope enum edge cases** — accept awkward `docs(docs):` > loosen rule.
+
+---
+
+<!-- Thêm entry mới ở dưới đây -->
+
+## [#21] <Next: T-020 Test sweep + bug hunt — FINAL>
 
 - **Date:**
 - **Tool:**
