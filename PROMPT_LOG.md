@@ -86,6 +86,10 @@ Mỗi entry theo format:
 - **Export intermediate helpers** = bonus testability + documentation về logic components (xem #09)
 - **Extract MỌI magic number** cho core business logic lib — không phải "nice-to-have" (xem #09)
 - **Purity verify tĩnh (grep) + động (test)** cho core lib — đáng đầu tư (xem #09)
+- **Rate limit key = business entity (employee), not IP** — critical cho B2B SaaS shared office (xem #10)
+- **Shared cross-cutting services → libs/api/common** to prevent circular deps (xem #10)
+- **Cache invalidation: enumerate ALL mutation points explicitly** — catch AI edge case misses (xem #10)
+- **Evidence persistence: failed attempts still logged** (event without session) cho audit trail (xem #10)
 - (thêm dần khi gặp)
 
 ---
@@ -1053,7 +1057,130 @@ Q2. TrustLevel type export để T-009 import cho DTO
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#10] <Next: T-009 Attendance check-in/out — Day 2 closeout>
+## [#10] T-009 — Attendance check-in/out core (Day 2 closeout)
+
+- **Date:** 2026-04-16
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** attendance
+- **Phase:** feature (task tích hợp lớn nhất)
+
+### Mục tiêu
+
+6 endpoints check-in/out + session management, tích hợp TẤT CẢ backend đã build (auth + branches + employees + trust-score). Redis cache branch config TTL 5' + 5 invalidation points. Per-employee rate limit. TZ-aware work_date. Manager override với audit. Day 2 closeout.
+
+### Prompt
+
+Workflow 3 vòng, prompt dài nhất project (task tích hợp nhiều module).
+
+**Vòng 1 — Plan + 10 decisions:**
+
+```
+T-009 (Attendance check-in/out core — task cuối Day 2, tích hợp toàn bộ).
+Plan: cache layer, rate limit, invalidation strategy, date library,
+schedule resolve, trust score aggregation, device upsert, failed events
+persistence, IP capture, override rules.
+10 decisions + ràng buộc nghiêm ngặt: KHÔNG trust is_mock_location,
+transaction wrap, cache invalidate, rate limit verify 429, audit log
+mandatory, failed events persisted.
+```
+
+**Vòng 2 — Push back trên open question + 4 ràng buộc:**
+
+```
+Rate limit tracker: chọn (b) custom UserThrottlerGuard per-employee.
+Lý do: office 100 nhân viên cùng IP NAT → IP-only throttle = show-stopper.
+Solution 1 (local guard): @SkipThrottle + @UseGuards(UserThrottlerGuard)
+tại endpoint, JwtAuthGuard chạy trước nên req.user đã có.
+4 ràng buộc thêm: R1 cache 5 points, R2 tz-aware work_date example,
+R3 failed event sessionId=NULL, R4 override note ≥10 chars.
+```
+
+### AI sinh ra
+
+- **`libs/api/attendance`** (~20 files): 2 controllers + 2 services + 5 DTOs + UserThrottlerGuard + work-date.util + 2 spec files (13 tests)
+- **`libs/api/common/branch-config-cache.service.ts`** — Redis cache TTL 5' + invalidate()
+- **Modified** `libs/api/branches/*.service.ts` — 5 cache invalidation points + DI inject
+- 6 new deps (cache + date), all pinned
+- 69/69 workspace tests pass, 8/8 smoke pass
+
+### Vấn đề phát hiện khi review
+
+**Insight #1: Per-employee rate limit = must-have, not nice-to-have**
+
+- AI initial plan: in-memory IP-based throttler (tiếp tục T-005)
+- AI tự flag open question: "shared IP throttle employees lẫn nhau"
+- User push back rõ: 100 nhân viên cùng NAT IP → show-stopper
+- Solution: custom `getTracker()` override → `user:${userId}` key
+- **Implementation subtlety:** JwtAuthGuard phải chạy TRƯỚC throttler để req.user có → local guard (Solution 1) thay vì reorder global (Solution 2)
+- **Lesson:** rate limit key design phải match business entity (employee), không phải network entity (IP). Đặc biệt quan trọng cho B2B SaaS với shared office.
+
+**Insight #2: Circular dependency avoided via libs/api/common**
+
+- `AttendanceService` cần branch config cache → `BranchConfigCacheService`
+- `BranchesService` cần invalidate cache → cùng `BranchConfigCacheService`
+- Nếu đặt trong `libs/api/branches` → `libs/api/attendance` import `libs/api/branches` → potential circular
+- AI tự đặt `BranchConfigCacheService` trong `libs/api/common` (global) — both consumers import common
+- **Lesson:** shared cross-cutting service (cache, audit) nên ở libs/api/common để tránh circular dep giữa feature modules.
+
+**Insight #3: Trust score 65 ≠ bug, = first-time device penalty**
+
+- Smoke test: GPS valid (+40) + BSSID match (+35) = 75 expected
+- Actual: 65 vì device_untrusted (-10) apply (first check-in, device mới)
+- AI explain chính xác trong report
+- After PATCH device is_trusted → score 90
+- **Lesson:** test expectation phải tính đủ ALL active flags, không chỉ positive weights.
+
+**Insight #4: Failed event sessionId=NULL = audit evidence pattern**
+
+- Spec rule: failed check-in vẫn log → `attendance_events` row persisted
+- R3 ràng buộc: sessionId=NULL để tránh conflict UNIQUE(employee_id, work_date) trên session
+- AI implement đúng: `!isHardValid` → create event (không session) → throw 422
+- DB verify confirm: failed row có `session_id=NULL, status='failed'`
+- **Lesson:** evidence persistence pattern: failed attempts vẫn phải log để audit trail + anomaly detection. Decouple event table từ session lifecycle.
+
+**Insight #5: Cache invalidation 5 points — AI tự enumerate**
+
+- User ràng buộc "list rõ 4 points" — AI tìm ra 5 (thêm geofence.create)
+- Mỗi point inject `BranchConfigCacheService.invalidate(branchId)` sau mutation
+- Branches test regression-free nhờ mock cache provider
+- **Lesson:** cache invalidation bugs thường xảy ra vì bỏ sót point. Yêu cầu AI enumerate explicit (không "all mutations") → catch edge case.
+
+### Cách chỉnh sửa
+
+1. `pnpm nx reset && nx run-many --target=test --all` (69/69)
+2. Smoke 8 cases (valid, double, checkout, no-checkin, invalid location, override, list, DB verify)
+3. DB verify: failed event `session_id=NULL` + audit override `before/after` JSON
+4. Cache verify: admin POST wifi-config → key evicted → next check-in repopulate
+5. Commit `5e4d545` — 35 files, lint-staged format
+6. PR #8 → CI pass → merge
+
+### Kết quả cuối cùng
+
+- Commit: `5e4d545` — `feat(attendance): add check-in/out core with trust score + Redis cache`
+- Merge: `e1d6270` — PR #8
+- Branch deleted
+- Test: 69/69 + 8/8 smoke + CI pass
+
+### Bài học rút ra
+
+- **Rate limit key = business entity (employee), not network entity (IP).** Especially critical for B2B SaaS with shared office IPs.
+- **Shared cross-cutting services (cache, audit) → libs/api/common** to prevent circular deps between feature modules.
+- **Test expectations must account for ALL active flags**, not just positive weights. Score = sum of everything.
+- **Evidence persistence pattern:** failed attempts still logged (event without session) for audit trail.
+- **Cache invalidation: enumerate ALL mutation points explicitly** in prompt — catch edge cases AI might miss with "all mutations".
+
+**Day 2 closeout summary:**
+
+- T-005 Auth → T-006 Branches → T-007 Employees → T-008 Trust Score → T-009 Attendance
+- 5 tasks, 8 PRs total (Day 1+2), 69 tests, 22 endpoints, Redis cache, full check-in flow
+- Backend **100% hoàn thành** theo MVP scope (docs/spec.md §11).
+- Ready for Day 3: Frontend (portal + mobile).
+
+---
+
+<!-- Thêm entry mới ở dưới đây -->
+
+## [#11] <Next: Day 3 Frontend — T-010 Portal login>
 
 - **Date:**
 - **Tool:**
