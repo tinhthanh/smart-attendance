@@ -2,6 +2,7 @@
 
 > Hệ thống chấm công thông minh cho doanh nghiệp **100 chi nhánh, 5.000 nhân viên** — check-in/out qua GPS geofencing + WiFi, có Trust Score và Anomaly Detection.
 
+[![CI](https://github.com/tinhthanh/smart-attendance/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/tinhthanh/smart-attendance/actions/workflows/ci.yml)
 [![Stack](https://img.shields.io/badge/stack-Nx_+_NestJS_+_Ionic_+_Prisma-blue)]()
 [![DB](https://img.shields.io/badge/db-PostgreSQL_16-336791)]()
 [![Deploy](https://img.shields.io/badge/deploy-Docker_Compose-2496ED)]()
@@ -83,7 +84,8 @@ Mỗi lần check-in được chấm điểm **0–100** dựa trên:
    └───────────┘  └────────┘
 ```
 
-Chi tiết: [`docs/spec.md` §2](docs/spec.md), [`docs/erd.md`](docs/erd.md).
+Chi tiết kiến trúc, scale narrative, trade-offs và known limitations: [`docs/architecture.md`](docs/architecture.md).
+Schema gốc: [`docs/erd.md`](docs/erd.md). Business rule: [`docs/spec.md` §2](docs/spec.md).
 
 ---
 
@@ -314,9 +316,9 @@ Xem [`PROMPT_LOG.md`](PROMPT_LOG.md) để hiểu cách team làm việc với A
 
 ## 🎬 Demo
 
-- **Video demo:** (link YouTube/Drive sẽ thêm sau)
-- **Live demo:** (nếu deploy)
-- **Demo script:** xem [`docs/demo-script.md`](docs/demo-script.md) (sẽ tạo)
+- **Video demo:** _Sẽ cập nhật sau khi quay video_
+- **Live demo:** _Sẽ cập nhật nếu deploy_
+- **Demo script:** [`docs/demo-script.md`](docs/demo-script.md) — kịch bản 8-10 phút self-shoot
 
 ---
 
@@ -353,4 +355,8 @@ Internal project — đề thi tuyển dụng.
 
 ## 👥 Team
 
-(điền tên + role)
+<!-- Replace with actual team info before submission. Keep table format. -->
+
+| Name          | Role                   | Contact            |
+| ------------- | ---------------------- | ------------------ |
+| _[Your Name]_ | _Full-stack Developer_ | _[email / github]_ |

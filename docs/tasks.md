@@ -1021,28 +1021,30 @@ KHÔNG sửa bug P2 nếu hết thời gian — log lại trong KNOWN_ISSUES.md.
 
 # 📊 Bảng tổng hợp tasks
 
-| ID    | Task              | Priority | Days | Est | Depends             |
-| ----- | ----------------- | -------- | ---- | --- | ------------------- |
-| T-001 | Nx workspace      | 🔴       | 1    | 30' | -                   |
-| T-002 | Docker skeleton   | 🔴       | 1    | 20' | T-001               |
-| T-003 | Prisma + seed     | 🔴       | 1    | 45' | T-002               |
-| T-004 | Git Flow + CI     | 🟡       | 1    | 15' | T-001               |
-| T-005 | Auth module       | 🔴       | 2    | 60' | T-003               |
-| T-006 | Branches CRUD     | 🔴       | 2    | 60' | T-005               |
-| T-007 | Employees CRUD    | 🔴       | 2    | 50' | T-006               |
-| T-008 | Trust Score util  | 🔴       | 2    | 30' | T-003               |
-| T-009 | Attendance core   | 🔴       | 2    | 90' | T-007, T-008        |
-| T-010 | Portal login      | 🔴       | 3    | 45' | T-005               |
-| T-011 | Portal CRUD UI    | 🟡       | 3    | 90' | T-006, T-007, T-010 |
-| T-012 | Mobile check-in   | 🔴       | 3    | 90' | T-009               |
-| T-013 | History views     | 🟡       | 3    | 45' | T-012               |
-| T-014 | Cron jobs         | 🔴       | 4    | 45' | T-009               |
-| T-015 | Dashboards        | 🟡       | 4    | 90' | T-014               |
-| T-016 | CSV export        | 🟡       | 4    | 45' | T-014               |
-| T-017 | Anti-fraud polish | 🟡       | 4    | 30' | T-009, T-013        |
-| T-018 | Production Docker | 🔴       | 5    | 30' | T-001..T-017        |
-| T-019 | README + demo     | 🔴       | 5    | 30' | T-018               |
-| T-020 | Test sweep        | 🟡       | 5    | 60' | T-001..T-019        |
+| ID    | Task              | Priority | Days | Est | Depends             | Status         |
+| ----- | ----------------- | -------- | ---- | --- | ------------------- | -------------- |
+| T-001 | Nx workspace      | 🔴       | 1    | 30' | -                   | ✅             |
+| T-002 | Docker skeleton   | 🔴       | 1    | 20' | T-001               | ✅             |
+| T-003 | Prisma + seed     | 🔴       | 1    | 45' | T-002               | ✅             |
+| T-004 | Git Flow + CI     | 🟡       | 1    | 15' | T-001               | ✅             |
+| T-005 | Auth module       | 🔴       | 2    | 60' | T-003               | ✅             |
+| T-006 | Branches CRUD     | 🔴       | 2    | 60' | T-005               | ✅             |
+| T-007 | Employees CRUD    | 🔴       | 2    | 50' | T-006               | ✅             |
+| T-008 | Trust Score util  | 🔴       | 2    | 30' | T-003               | ✅             |
+| T-009 | Attendance core   | 🔴       | 2    | 90' | T-007, T-008        | ✅             |
+| T-010 | Portal login      | 🔴       | 3    | 45' | T-005               | ✅             |
+| T-011 | Portal CRUD UI    | 🟡       | 3    | 90' | T-006, T-007, T-010 | ✅             |
+| T-012 | Mobile check-in   | 🔴       | 3    | 90' | T-009               | ✅             |
+| T-013 | History views     | 🟡       | 3    | 45' | T-012               | ✅             |
+| T-014 | Cron jobs         | 🔴       | 4    | 45' | T-009               | ✅             |
+| T-015 | Dashboards        | 🟡       | 4    | 90' | T-014               | ✅             |
+| T-016 | CSV export        | 🟡       | 4    | 45' | T-014               | ✅             |
+| T-017 | Anti-fraud polish | 🟡       | 4    | 30' | T-009, T-013        | ✅             |
+| T-018 | Production Docker | 🔴       | 5    | 30' | T-001..T-017        | ✅             |
+| T-019 | README + demo     | 🔴       | 5    | 30' | T-018               | 🟡 in progress |
+| T-020 | Test sweep        | 🟡       | 5    | 60' | T-001..T-019        | ⏳ pending     |
+
+**Progress: 18/20 tasks complete** (T-001 → T-018 merged to develop). T-019 in progress, T-020 pending.
 
 **Tổng:** 20 tasks chính + 4 bonus.
 **Tổng thời gian AI:** ~17h
