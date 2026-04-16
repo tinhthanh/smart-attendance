@@ -122,6 +122,11 @@ Mỗi entry theo format:
 - **Streaming + cursor batching cho export từ MVP** — build-then-write vỡ memory (xem #17)
 - **Blob download với HttpClient + auth header** — token in URL leak risk (xem #17)
 - **UTF-8 BOM cho CSV Vietnamese** — Excel render UX (xem #17)
+- **AI pre-work verify > blind follow prompt** — source code là source of truth (xem #18)
+- **Nx @nx/dependency-checks strict — mọi cross-lib import PHẢI declare** trong package.json (kể cả type-only) (xem #18)
+- **Backward compat wrapper khi refactor shared utility** — giảm migration risk (xem #18)
+- **Severity scheme match data domain** — 4-tier > 3-tier khi có positive signals (xem #18)
+- **Single source of truth = compile-time Record + runtime fallback** — defensive design (xem #18)
 - (thêm dần khi gặp)
 
 ---
@@ -2010,7 +2015,119 @@ D3: `os.tmpdir()` không hardcode `/tmp`
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#18] <Next: T-017 Anti-fraud UX polish>
+## [#18] T-017 — Anti-fraud UX polish + shared risk-flags (Day 4 closeout)
+
+- **Date:** 2026-04-16
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** shared / portal / mobile
+- **Phase:** feature (polish, Day 4 cuối)
+
+### Mục tiêu
+
+Shared risk-flags constant (single source of truth), 4-severity chip component, anomaly rows clickable, mobile fail dialog primary+secondary layout, README anti-fraud section. Task polish không feature mới.
+
+### Prompt
+
+Workflow 3 vòng rất gọn — plan đã rõ, task polish scope nhỏ.
+
+**Vòng 1 — Plan + 10 decisions:**
+
+```
+T-017 Anti-fraud UX polish. Shared risk-flags map, 4-severity chip,
+README section. 10 decisions với recommend.
+```
+
+**Vòng 2 — Approve + 2 refinements:**
+
+```
+Approve 10/10 + 5 extras.
+R1. Severity mapping explicit trong shared constant
+R2. README anti-fraud section 3 paragraphs với 12-flag table
+```
+
+### AI sinh ra
+
+- **`libs/shared/constants/risk-flags.ts`** — Record<TrustFlag, RiskFlagInfo> với 12 flags mapped
+- **`RiskFlagChipComponent`** (portal standalone) — ion-chip + ion-popover hover tooltip
+- **`pickPrimaryFlag()` helper** — severity rank cho mobile primary display
+- **Portal modifications**: session-detail, branch-dashboard, anomalies (rows clickable routerLink)
+- **Mobile**: drop local FLAG_MESSAGES, re-export shared
+- **README "Anti-fraud strategy" section** — 3 paragraphs
+- 49 tests pass, 6/6 smoke pass
+
+### Vấn đề phát hiện khi review
+
+**Insight #1: AI pre-work verify tìm ra gap so với user input**
+
+- User prompt list 7 flags (outside_geofence, wifi_mismatch, etc.)
+- AI grep canonical source `libs/shared/utils/trust-score.types.ts` → 12 flags (bao gồm positive: bssid_match, device_trusted)
+- Report rõ gap trong plan → severity design phải 4 tier (success/info/warning/danger) thay vì 3
+- **Lesson:** pre-work verification > blindly follow user prompt. Source code là source of truth, không phải recall của user.
+
+**Insight #2: CI fail — Nx dependency-checks lint**
+
+- CI fail: `libs/shared/constants/package.json: missing dependency for @smart-attendance/shared/utils`
+- Root cause: `import type { TrustFlag }` từ shared/utils — type-only import nhưng Nx lint require declare
+- Fix: thêm `"@smart-attendance/shared/utils": "workspace:*"` vào package.json
+- **Lesson:** Nx monorepo với `@nx/dependency-checks` — MỌI cross-lib import (kể cả type-only) phải declare trong package.json.
+
+**Insight #3: Backward compat wrapper cho migration**
+
+- Mobile có `flagMessage(flag, distance)` helper với distance suffix logic
+- Shared constant mới chỉ return label (không distance)
+- AI giữ wrapper `flagMessage()` trong mobile — call shared `getRiskFlagInfo()` bên trong + append distance
+- **Lesson:** khi refactor shared utility từ app-local sang workspace-shared, giữ backward compat wrapper giảm migration risk.
+
+**Insight #4: 4-tier severity fit Ionic + positive flags**
+
+- 3-tier (red/yellow/gray) không express được positive signals
+- 4-tier (success/info/warning/danger) = Ionic built-in color tokens
+- Positive flags được hiển thị rõ ràng (xanh)
+- **Lesson:** severity scheme phải match data domain, không default "3 level negative only".
+
+**Insight #5: Shared constant drift mitigation**
+
+- Risk: BE thêm flag mới → shared map outdated → FE crash
+- Mitigation: TypeScript Record strict typing + runtime fallback `getRiskFlagInfo('unknown')` → severity=info, label=raw
+- **Lesson:** single source of truth cần defensive fallback — compile-time type safety + runtime graceful handling.
+
+### Cách chỉnh sửa
+
+1. AI exec với 2 refinements R1-R2
+2. Test 49/49 + smoke 6/6 pass
+3. Commit `272543f` → CI fail (constants package.json dep check) → fix `c6ecb4f` → CI pass → merge
+4. Day 4 closeout
+
+### Kết quả cuối cùng
+
+- Commits:
+  - `272543f` — `feat(shared): polish anti-fraud UX with shared risk-flags + 4-severity chip`
+  - `c6ecb4f` — `fix(shared): declare @smart-attendance/shared/utils as constants dep`
+- Merge: `649d274` — PR #16
+- Branch deleted
+- Test: 49/49 workspace + 6/6 smoke + CI pass (sau fix dep)
+
+**Day 4 closeout summary:**
+
+- T-014 → T-017: Reports + Dashboards + Polish DONE
+- 4 PRs merged, chỉ T-017 có CI fail (Nx lint quirk)
+- Pattern maturity: T-012/T-013 zero-bug, T-014/T-015/T-016 CI pass first try, T-017 caught edge case
+- PROMPT_LOG grown 15 → 18 entries
+- Backend + Frontend 100% feature complete theo docs/spec.md §11 MVP scope
+
+### Bài học rút ra
+
+- **AI pre-work verification > blind follow prompt** — source code là source of truth cho flag enumeration.
+- **Nx @nx/dependency-checks lint strict — mọi cross-lib import PHẢI declare** trong package.json, kể cả type-only.
+- **Backward compat wrapper khi refactor shared utility** — giảm migration risk.
+- **Severity scheme match data domain**, không default 3-tier negative only.
+- **Single source of truth = compile-time Record + runtime fallback** — defensive design.
+
+---
+
+<!-- Thêm entry mới ở dưới đây -->
+
+## [#19] <Next: Day 5 — T-018 Production Docker>
 
 - **Date:**
 - **Tool:**
