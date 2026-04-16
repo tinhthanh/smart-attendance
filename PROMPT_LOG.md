@@ -90,6 +90,10 @@ Mỗi entry theo format:
 - **Shared cross-cutting services → libs/api/common** to prevent circular deps (xem #10)
 - **Cache invalidation: enumerate ALL mutation points explicitly** — catch AI edge case misses (xem #10)
 - **Evidence persistence: failed attempts still logged** (event without session) cho audit trail (xem #10)
+- **`pnpm nx reset` trước final test khi modify scaffold — SYSTEMATIC rule** (T-005 + T-010 cùng pattern) (xem #11)
+- **Angular 17+ functional guards/interceptors** default mới, class pattern legacy (xem #11)
+- **Jest + Ionic ESM**: `transformIgnorePatterns` phải whitelist `@ionic|@stencil|ionicons` (xem #11)
+- **FE types duplicate > shared từ BE libs** — giảm coupling, giữ FE build độc lập (xem #11)
 - (thêm dần khi gặp)
 
 ---
@@ -1180,7 +1184,108 @@ R3 failed event sessionId=NULL, R4 override note ≥10 chars.
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#11] <Next: Day 3 Frontend — T-010 Portal login>
+## [#11] T-010 — Portal login + auth flow + signal-based state (Day 3 start)
+
+- **Date:** 2026-04-16
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** portal
+- **Phase:** feature (frontend foundation)
+
+### Mục tiêu
+
+Login page + auth flow cho Ionic Angular portal, signal-based state, functional interceptor + guard (Angular 17+), dev proxy, Vietnamese UX.
+
+### Prompt
+
+Workflow 3 vòng tối giản — AI reuse plan đã có.
+
+**Vòng 1 — Plan + 10 decisions (user recommend rõ):**
+
+```
+Bắt đầu Day 3. T-010 Portal login. Plan: auth infrastructure, token
+storage, API service, environment + proxy, /login + /dashboard.
+10 decisions với recommend rõ.
+```
+
+**Vòng 2 — Exec thẳng:**
+
+```
+Option 3 — Exec luôn. Decisions đã approve đầy đủ.
+Sau exec: manual browser test 7 items, user verify trước khi commit.
+```
+
+### AI sinh ra
+
+- **Auth core**: auth.service (signals) + interceptor (401 queue + refresh replay) + guard (canActivateFn) + token-storage + api.service
+- **Pages**: /login (reactive form + Ionic + toast Vietnamese), /dashboard (placeholder)
+- **Config**: proxy.conf.json, environments, .gitignore (.angular/)
+- Removed nx-welcome.ts
+- Manual browser test 7/7 pass
+
+### Vấn đề phát hiện khi review
+
+**Insight #1: Jest + Ionic ESM — cùng pattern T-005 lặp lại**
+
+- CI fail: `@ionic/core/components/index.js:4 SyntaxError: Unexpected token 'export'`
+- Root cause 1: `transformIgnorePatterns` chỉ whitelist `.mjs`, nhưng @ionic/core dùng `.js` ESM
+- Root cause 2: `app.spec.ts` (Nx-generated) vẫn import `NxWelcome` (đã xóa) và test h1 `Welcome portal` (không còn sau ion-app refactor)
+- Fix 1: `transformIgnorePatterns` whitelist `@ionic|@stencil|ionicons`
+- Fix 2: Rewrite spec thành minimal smoke test với `provideHttpClient + provideRouter`
+- **Local nx cache hide failure** — T-005 lesson lặp lại 100%.
+- **Lesson reinforced:** `pnpm nx reset` trước final test khi modify scaffold-generated components — cần apply **systematically**.
+
+**Insight #2: Functional guards + interceptors = Angular 17+ modern**
+
+- AI dùng `canActivateFn` (function) thay vì `CanActivate` class
+- Interceptor `HttpInterceptorFn` với `withInterceptors([...])`
+- **Lesson:** Angular 17+ functional API là default mới; class pattern là legacy.
+
+**Insight #3: 401 queue + single refresh replay cho FE**
+
+- AI implement: `isRefreshing` flag + `BehaviorSubject<string|null>` cho concurrent 401
+- Multiple requests pending → queue → 1 refresh call → replay với new token
+- **Lesson:** FE auth phải handle race condition khi multiple requests expire cùng lúc.
+
+**Insight #4: FE-only types > shared từ libs/api/\***
+
+- Đề xuất: KHÔNG import types từ libs/api/\* vào portal — duplicate nhẹ trong `shared/types/auth.types.ts`
+- Lý do: giảm coupling FE-BE + giữ FE build độc lập
+- **Lesson:** shared types nghe hấp dẫn nhưng gây coupling + build graph phức tạp.
+
+**Insight #5: Vietnamese error UX mapping**
+
+- Error code → Vietnamese message map (vd: INVALID_CREDENTIALS → "Sai email hoặc mật khẩu")
+- **Lesson:** i18n đầy đủ là phase 2; error mapping cho UX thân thiện nên làm từ MVP.
+
+### Cách chỉnh sửa
+
+1. Exec plan, manual browser test (AI không chạy browser được)
+2. User verify 7 items pass
+3. Commit `f0b273b` + CI fail → fix `b4f68d9` (jest + spec)
+4. Re-run CI pass → merge
+
+### Kết quả cuối cùng
+
+- Commits:
+  - `f0b273b` — `feat(portal): add login page + auth flow + signal-based state`
+  - `b4f68d9` — `fix(portal): jest config for Ionic ESM + rewrite stale app.spec`
+- Merge: `b69802b` — PR #9
+- Test: smoke + manual 7/7 + CI pass
+
+### Bài học rút ra
+
+- **`pnpm nx reset` trước final test khi modify scaffold — rule bắt buộc** (T-005 lặp ở T-010).
+- **Angular 17+ functional guards/interceptors** là default mới.
+- **401 queue + single refresh replay** = OAuth2 FE pattern.
+- **FE types duplicate nhẹ > shared từ BE libs** — giảm coupling.
+- **Jest + Ionic ESM**: `transformIgnorePatterns` phải whitelist explicit.
+- **Error code → Vietnamese mapping** = UX boost ngay MVP.
+
+---
+
+<!-- Thêm entry mới ở dưới đây -->
+
+## [#12] <Next: T-011 Portal CRUD UI>
 
 - **Date:**
 - **Tool:**
