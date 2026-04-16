@@ -117,6 +117,11 @@ Mỗi entry theo format:
 - **Read model (CQRS-lite) cho dashboard scale** — 60s staleness cho 10x speed (xem #16)
 - **Role-based default routing > neutral default** — auto-redirect manager (xem #16)
 - **Empty state = communication opportunity** — "Hệ thống bình thường" thay vì "No data" (xem #16)
+- **AI tự document deviation + xin approve TRƯỚC commit** — pattern trưởng thành (xem #17)
+- **Defense-in-depth scope check (create + download)** — single layer trên secure URL là risky (xem #17)
+- **Streaming + cursor batching cho export từ MVP** — build-then-write vỡ memory (xem #17)
+- **Blob download với HttpClient + auth header** — token in URL leak risk (xem #17)
+- **UTF-8 BOM cho CSV Vietnamese** — Excel render UX (xem #17)
 - (thêm dần khi gặp)
 
 ---
@@ -1882,7 +1887,130 @@ V1. Verify apexcharts heatmap support hour 0-23 trước khi viết SQL
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#17] <Next: T-016 CSV export>
+## [#17] T-016 — CSV export async với BullMQ + streaming + scope check
+
+- **Date:** 2026-04-16
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** reports
+- **Phase:** feature
+
+### Mục tiêu
+
+3 endpoints async CSV export với BullMQ, csv-stringify streaming, UTF-8 BOM cho Excel, defense-in-depth scope check trên download endpoint, frontend modal polling + blob download. Reuse pattern T-014.
+
+### Prompt
+
+Workflow 3 vòng + 3 deviation acknowledged.
+
+**Vòng 1 — Plan + 10 decisions:**
+
+```
+T-016 CSV export. 3 endpoints async với BullMQ. csv-stringify, file
+storage /tmp local MVP, manager scope, rate limit 3/min/user.
+10 decisions với recommend.
+```
+
+**Vòng 2 — Approve + 3 refinements + 2 verifications:**
+
+```
+Approve 10/10 + 5 extras.
+R1. Download endpoint scope enforcement (defense in depth)
+R2. Audit log với filter params đầy đủ
+R3. Job status response shape consistency với api-spec §6 snake_case
+V1. Verify csv-stringify maintained
+V2. Confirm column order
+```
+
+### AI sinh ra
+
+- **`libs/api/reports`**: service + controller + module + processor + cleanup scheduler + DTOs + 11 specs
+- **3 endpoints** match api-spec §6
+- **csv-stringify@6.7.0** streaming + UTF-8 BOM + 11 cols Vietnamese
+- **Frontend**: API service + export-progress modal (2s polling + blob download) + button trên /attendance
+- **3 deviations** documented + accepted
+- 11/11 unit tests + 7/7 smoke pass
+
+### Vấn đề phát hiện khi review
+
+**Insight #1: 3 deviations from plan — AI tự document + xin approve**
+
+D1: AuditAction enum không có 'export'
+
+- Workaround: `action='create'` + `entityType='AttendanceReport'`
+- Per CLAUDE.md §9: don't modify schema without asking
+- Audit data preserved trong entity_type + after JSON
+- Future: migration add 'export' enum nếu cần
+
+D2: Per-IP rate limit thay per-user
+
+- UserThrottlerGuard (T-009 pattern) + @SkipThrottle metadata conflict
+- Same NAT trade-off như T-009 documented
+- For exports (admin/manager only, không bulk employee), per-IP acceptable
+- Future: custom APP_GUARD replacement
+
+D3: `os.tmpdir()` không hardcode `/tmp`
+
+- Cross-platform: /var/folders/.../T/ Mac, /tmp Linux/CI
+- Pragmatic improvement over plan
+
+- **Lesson critical:** AI gặp obstacle implementation → tự document deviation + xin user approve TRƯỚC commit, không silently work-around. Đây là pattern AI workflow trưởng thành.
+
+**Insight #2: Defense-in-depth scope check khác layers**
+
+- Layer 1: createExportJob check user role + scope → reject if not allowed
+- Layer 2: Download endpoint re-check ownership (`requestedBy === user.id` || admin || (manager AND filter.branch_id ∈ own branches))
+- Lý do: dù jobId UUID v4 unguessable, không nên rely on obscurity
+- **Lesson:** scope check tại CỬA VÀO (create) + CỬA RA (download) — defense in depth. Single layer assume secure URLs là risky.
+
+**Insight #3: Streaming CSV pipe = constant memory**
+
+- `csv-stringify.pipe(writeStream)` — không build full string trong memory
+- Cursor-based DB query (skip/take 500/page) thay vì loadAll
+- 10k row cap thêm safety net
+- **Lesson:** export endpoints PHẢI streaming + cursor batching từ MVP. Build-then-write pattern fine cho 100 rows, vỡ memory ở 10k+.
+
+**Insight #4: Blob download với auth header > token in URL**
+
+- Frontend: `HttpClient.get(url, { responseType: 'blob' })` với auth interceptor
+- Tạo blob URL với `URL.createObjectURL(blob)`, trigger download, sau đó `URL.revokeObjectURL`
+- KHÔNG dùng `<a href="/download?token=...">` (token leak vào browser history, server logs, referer)
+- **Lesson:** auth-protected file download phải qua HttpClient blob, không expose token trong URL.
+
+**Insight #5: UTF-8 BOM cho Excel = Vietnamese rendering**
+
+- Without BOM: Excel mở .csv → tiếng Việt thành mojibake (â,ð,ê)
+- With BOM `\uFEFF` prefix: Excel detect UTF-8 → render đúng
+- 3 byte overhead, savings: user không phải import wizard manual
+- **Lesson:** CSV export cho người dùng Vietnamese ALWAYS prefix BOM. Documented trong file header constant.
+
+### Cách chỉnh sửa
+
+1. AI exec với 3 ràng buộc R1-R3 + 5 extras
+2. Smoke 7/7 pass: admin success, manager scope, employee 403, rate limit
+3. Verify CSV file: bytes count, BOM hex, Vietnamese render trong Excel manual
+4. Verify audit_logs: 7 entries với entity_type + after JSON
+5. Commit `956e7e9` → CI pass → merge
+
+### Kết quả cuối cùng
+
+- Commit: `956e7e9` — `feat(reports): add async CSV export with BullMQ + streaming`
+- Merge: `546308d` — PR #15
+- Branch deleted
+- Test: 11/11 unit + 7/7 smoke + CI pass
+
+### Bài học rút ra
+
+- **AI tự document deviation + xin approve TRƯỚC commit** = pattern trưởng thành (D1-D3 cycle).
+- **Defense-in-depth scope check (create + download)** — single layer assume secure URL là risky.
+- **Streaming + cursor batching cho export từ MVP** — build-then-write vỡ memory ở scale.
+- **Blob download với HttpClient + auth header** — token in URL leak risk.
+- **UTF-8 BOM cho CSV Vietnamese** — Excel render UX, 3 byte overhead.
+
+---
+
+<!-- Thêm entry mới ở dưới đây -->
+
+## [#18] <Next: T-017 Anti-fraud UX polish>
 
 - **Date:**
 - **Tool:**
