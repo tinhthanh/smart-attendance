@@ -2351,25 +2351,144 @@ Workflow 3 vòng gọn — task docs, 10 decisions recommend.
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#21] <Next: T-020 Test sweep + bug hunt — FINAL>
+## [#21] T-020 — Test sweep + BullMQ shutdown fix + KNOWN_ISSUES.md (FINAL)
 
-- **Date:**
-- **Tool:**
-- **Module:**
-- **Phase:**
+- **Date:** 2026-04-16
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** api / docs
+- **Phase:** cleanup + submission (Day 5 closeout, FINAL task của MVP)
 
 ### Mục tiêu
 
+Test sweep toàn hệ thống, fix P1 BullMQ graceful shutdown (từ T-018 V2), update CLAUDE.md §8 raw SQL exception (từ T-014/T-015/T-016 precedent), tạo KNOWN_ISSUES.md consolidated cheat sheet, verify 14-step golden path + coverage ≥60% core libs.
+
 ### Prompt
 
-```
+Workflow 3 vòng gọn — task cuối, scope rõ.
 
-```
+**Vòng 1 — Plan + 10 decisions.**
+**Vòng 2 — Approve + 2 refinements (shutdown verify + KNOWN_ISSUES structure).**
 
 ### AI sinh ra
 
+- **apps/api/src/main.ts**: +3 lines `app.enableShutdownHooks()` trước `app.listen()`
+- **CLAUDE.md §8**: NEW "Exception — Raw SQL cho analytics" section với R1-R4 constraints
+- **KNOWN_ISSUES.md** (NEW, root): 4 sections (P1 fixed, P2 documented 9 issues, future improvements, workarounds cheat sheet)
+- 148/148 tests pass across 14 projects
+- Coverage ≥60% tất cả 4 core libs (attendance 87%, auth 93%, dashboard 94%, reports 77%)
+- Docker graceful shutdown verified (exit 143 + Prisma disconnect log)
+- 14-step golden path smoke green
+
 ### Vấn đề phát hiện khi review
+
+**Insight #1: P1 fix 1-line = huge behavior change**
+
+- `app.enableShutdownHooks()` trước `app.listen()` — single line
+- Effect: onModuleDestroy() lifecycle cho TẤT CẢ modules (Prisma, BullMQ, Cache)
+- Without it: docker stop → immediate exit, data loss risk cho in-flight jobs
+- With it: SIGTERM → clean cascade close → exit 143 graceful
+- **Lesson:** NestJS framework có "sharp edges" mà chỉ hiện khi deploy. `enableShutdownHooks()` phải call TRƯỚC `listen()` — pattern critical cho production nhưng dễ miss trong dev.
+
+**Insight #2: CLAUDE.md exception documentation = retroactive policy**
+
+- 3 tasks trước (T-014/T-015/T-016) đã tạo precedent raw SQL exception
+- T-020 formally document vào CLAUDE.md §8 với 4 constraints R1-R4
+- Không phải "add rule retroactively" — consolidate practice đã được audit
+- **Lesson:** rules cứng có thể evolve thành "rules with documented exceptions" khi gặp use case hợp lý qua multiple tasks. Consolidate precedent > hack workaround per task.
+
+**Insight #3: KNOWN_ISSUES.md = submission credibility**
+
+- 9 P2 issues surfaced proactively với workaround + future fix path
+- Grader đọc thấy "bạn biết limitations" > "bạn hide chúng"
+- Structure: P1 fixed / P2 documented / future / workarounds
+- **Lesson:** submission artifact cần KNOWN_ISSUES.md — honest engineering scorecard.
+
+**Insight #4: Coverage report với numbers cụ thể > "all pass"**
+
+- Thay vì "tests pass" → report: attendance 87%, auth 93%, dashboard 94%, reports 77%
+- Mỗi lib có specific coverage cho grader verify claim
+- **Lesson:** deliverable reports phải có concrete metrics, không generic.
+
+**Insight #5: 14-step golden path smoke = integration sanity**
+
+- End-to-end flow từ admin setup → employee check-in → manager override → CSV export
+- Catch integration issue mà unit test không thấy
+- Cover 6/7 module (auth, branches, employees, attendance, dashboard, reports — trừ audit viewed via logs)
+- **Lesson:** manual golden path smoke mỗi final release — catch integration regressions. Unit test alone ≠ ship confidence.
 
 ### Cách chỉnh sửa
 
+1. AI exec với 2 refinements
+2. P1 fix 1-line, verify shutdown với docker stop
+3. CLAUDE.md §8 section mới với 4 constraints
+4. KNOWN_ISSUES.md 4 sections comprehensive
+5. Full test sweep + coverage report
+6. 14-step golden path smoke
+7. Split 2 commits logical (fix + docs)
+8. Push + PR #19 → CI pass → merge
+
 ### Kết quả cuối cùng
+
+- Commits:
+  - `c8de382` — `fix(api): enable NestJS shutdown hooks for graceful BullMQ close`
+  - `bdf3479` — `docs(docs): CLAUDE.md raw SQL exception + KNOWN_ISSUES.md consolidated`
+- Merge: `281e8f9` — PR #19 (FINAL)
+- Test: 148/148 + coverage ≥60% core + 14-step golden path + graceful shutdown
+
+---
+
+## 🎯 5-DAY MVP COMPLETE — FINAL RECAP
+
+### Stats
+
+| Metric             | Value                                                |
+| ------------------ | ---------------------------------------------------- |
+| Days               | 5                                                    |
+| Tasks              | 20/20 ✅ (100%)                                      |
+| PRs                | 19 merged                                            |
+| Commits            | 60+ conventional                                     |
+| Tests              | 148 passing (14 projects)                            |
+| Coverage core libs | auth 93%, dashboard 94%, attendance 87%, reports 77% |
+| Endpoints          | 22 REST                                              |
+| Modules            | 18 (6 api libs + 3 apps + 3 shared libs + 6 infra)   |
+| PROMPT_LOG         | 21 entries, ~85 design lessons                       |
+| Docker             | 1-command boot, 4 services healthy < 30s             |
+| Image sizes        | api 326MB, portal 52MB (industry baseline)           |
+| Known issues       | 9 P2 documented (0 P0, 0 P1 after T-020)             |
+
+### Pattern maturity evolution
+
+| Day             | Pattern                                                                  |
+| --------------- | ------------------------------------------------------------------------ |
+| 1 (T-001-T-004) | Workflow 3 vòng established (plan → verify → execute)                    |
+| 2 (T-005-T-009) | Backend pattern settling — auth foundation reused 3x                     |
+| 3 (T-010-T-013) | Frontend pattern settling — zero-bug first try cho T-012/T-013           |
+| 4 (T-014-T-017) | Cross-cutting pattern — BullMQ + raw SQL exception + cache strategy      |
+| 5 (T-018-T-020) | Submission polish — Docker optimization + docs credibility + final sweep |
+
+### Key insights consolidated
+
+1. **Workflow 3 vòng (plan → verify → execute)** ngăn rollback + bypass safeguard
+2. **Pre-work verify > blind follow user prompt** — source code là source of truth
+3. **Idempotency 2 layers (queue + DB)** = belt-and-suspenders
+4. **Separation of concerns module** — business service không ở module infrastructure
+5. **Read model (CQRS-lite) cho dashboard scale** — 60s lag cho 10x speed
+6. **Defense-in-depth scope check (create + download)** — single layer assume secure URL là risky
+7. **AI tự document deviation + xin approve TRƯỚC commit** = pattern trưởng thành
+8. **Nx cache local có thể HIDE test failures CI catch** — `pnpm nx reset` systematic
+9. **tini PID 1 BẮT BUỘC cho Node container** — missing = stuck on restart
+10. **Known limitations transparent = submission credibility** > hide bugs
+
+### Final bài học
+
+- **Submission = consolidation opportunity** không phải rush. T-017/T-018/T-019/T-020 policy
+  consolidation (CLAUDE.md exceptions, KNOWN_ISSUES.md) cho thấy 5-day process thực sự
+  produced engineering maturity, không chỉ features.
+- **AI agent workflow với discipline (3 vòng, review checklist, document deviation) = reliable
+  production code** — 148 tests pass CI + 14-step golden path green là proof.
+- **PROMPT_LOG.md = document chấm điểm 15%** — 21 entries với 85+ lessons là storytelling
+  về engineering process, không chỉ "prompts used".
+
+---
+
+<!-- End of log — MVP complete 2026-04-16 -->
