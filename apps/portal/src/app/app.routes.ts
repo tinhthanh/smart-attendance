@@ -49,6 +49,20 @@ export const appRoutes: Route[] = [
             (m) => m.EmployeeDetailPage
           ),
       },
+      {
+        path: 'attendance',
+        loadComponent: () =>
+          import('./pages/attendance/sessions-list.page').then(
+            (m) => m.SessionsListPage
+          ),
+      },
+      {
+        path: 'attendance/:id',
+        loadComponent: () =>
+          import('./pages/attendance/session-detail.page').then(
+            (m) => m.SessionDetailPage
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: 'dashboard' },
