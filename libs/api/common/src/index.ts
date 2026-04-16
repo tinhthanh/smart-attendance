@@ -9,3 +9,4 @@ export * from './lib/dto/pagination.dto';
 export * from './lib/types/api-response.type';
 export * from './lib/pagination.util';
 export * from './lib/branch-scope.helper';
+export * from './lib/branch-config-cache.service';

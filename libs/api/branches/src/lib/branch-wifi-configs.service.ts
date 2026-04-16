@@ -1,20 +1,23 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   AuditLogService,
+  BranchConfigCacheService,
   BusinessException,
   ErrorCode,
   PrismaService,
+  UserRolesContext,
+  isAdmin,
 } from '@smart-attendance/api/common';
 import { CreateWifiConfigDto } from './dto/create-wifi-config.dto';
 import { BranchesService, RequestCtx } from './branches.service';
-import { UserRolesContext, isAdmin } from '@smart-attendance/api/common';
 
 @Injectable()
 export class BranchWifiConfigsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditLogService,
-    private readonly branches: BranchesService
+    private readonly branches: BranchesService,
+    private readonly cache: BranchConfigCacheService
   ) {}
 
   async list(user: UserRolesContext, branchId: string) {
@@ -78,6 +81,7 @@ export class BranchWifiConfigsService {
         ipAddress: ctx.ipAddress,
         userAgent: ctx.userAgent,
       });
+      await this.cache.invalidate(branchId);
       return {
         id: row.id,
         ssid: row.ssid,
@@ -123,6 +127,7 @@ export class BranchWifiConfigsService {
         ipAddress: ctx.ipAddress,
         userAgent: ctx.userAgent,
       });
+      await this.cache.invalidate(branchId);
       return { success: true };
     });
   }

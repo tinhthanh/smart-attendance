@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import {
   AuditLogService,
+  BranchConfigCacheService,
   BusinessException,
   ErrorCode,
   PrismaService,
@@ -13,6 +14,7 @@ describe('BranchesService', () => {
   let service: BranchesService;
   let prisma: DeepMockProxy<PrismaService>;
   let audit: DeepMockProxy<AuditLogService>;
+  let cache: DeepMockProxy<BranchConfigCacheService>;
 
   const adminUser = { id: 'admin-1', email: 'admin@x', roles: ['admin'] };
   const managerUser = { id: 'manager-1', email: 'mgr@x', roles: ['manager'] };
@@ -35,11 +37,13 @@ describe('BranchesService', () => {
   beforeEach(async () => {
     prisma = mockDeep<PrismaService>();
     audit = mockDeep<AuditLogService>();
+    cache = mockDeep<BranchConfigCacheService>();
     const module = await Test.createTestingModule({
       providers: [
         BranchesService,
         { provide: PrismaService, useValue: prisma },
         { provide: AuditLogService, useValue: audit },
+        { provide: BranchConfigCacheService, useValue: cache },
       ],
     }).compile();
     service = module.get(BranchesService);
