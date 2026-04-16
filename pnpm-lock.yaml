@@ -115,6 +115,9 @@ importers:
       class-validator:
         specifier: 0.14.2
         version: 0.14.2
+      csv-stringify:
+        specifier: 6.7.0
+        version: 6.7.0
       date-fns:
         specifier: 4.1.0
         version: 4.1.0
@@ -7899,6 +7902,12 @@ packages:
         integrity: sha512-2z+rWdzbbSZv6/rhtvzvqeZQHrBaqgogqt85sqFNbabZOuFbCVFb8kPeEtZjiKkbrm395irpNKiYeFeLiQnFPg==,
       }
     engines: { node: '>=18' }
+
+  csv-stringify@6.7.0:
+    resolution:
+      {
+        integrity: sha512-UdtziYp5HuTz7e5j8Nvq+a/3HQo+2/aJZ9xntNTpmRRIg/3YYqDVgiS9fvAhtNbnyfbv2ZBe0bqCHqzhE7FqWQ==,
+      }
 
   data-urls@3.0.2:
     resolution:
@@ -20544,6 +20553,8 @@ snapshots:
     dependencies:
       '@asamuzakjp/css-color': 3.2.0
       rrweb-cssom: 0.8.0
+
+  csv-stringify@6.7.0: {}
 
   data-urls@3.0.2:
     dependencies:

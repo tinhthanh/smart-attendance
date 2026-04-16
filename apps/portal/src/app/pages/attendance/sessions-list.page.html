@@ -4,6 +4,12 @@
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
     <ion-title>Chấm công</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="openExportModal()" [disabled]="loading()">
+        <ion-icon slot="start" name="download-outline"></ion-icon>
+        Xuất CSV
+      </ion-button>
+    </ion-buttons>
     @if (isManagerOnly()) {
     <ion-chip color="warning" slot="end">
       <ion-label>Chỉ xem phiên thuộc chi nhánh được phân công</ion-label>

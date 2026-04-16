@@ -18,6 +18,7 @@ import {
 import { EmployeesModule } from '@smart-attendance/api/employees';
 import { DashboardModule } from '@smart-attendance/api/dashboard';
 import { JobsModule } from '@smart-attendance/api/jobs';
+import { ReportsModule } from '@smart-attendance/api/reports';
 import { redisStore } from 'cache-manager-ioredis-yet';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -48,6 +49,7 @@ import { envValidationSchema } from './env.validation';
     AttendanceModule,
     JobsModule,
     DashboardModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [
