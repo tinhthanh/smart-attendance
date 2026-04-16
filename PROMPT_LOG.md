@@ -112,6 +112,11 @@ Mỗi entry theo format:
 - **Idempotency 2 layers (queue + DB) = belt-and-suspenders** (xem #15)
 - **Dependent cron jobs cần coordination filter** — race condition silent killer (xem #15)
 - **Scope enum locked → plan sớm hoặc semantic remap** (xem #15)
+- **Prisma `$queryRaw` against UUID columns LUÔN cast `::uuid` explicit** — auto-cast không work (xem #16)
+- **Version pinning sớm cascade tới downstream choices** — accept trade-off (xem #16)
+- **Read model (CQRS-lite) cho dashboard scale** — 60s staleness cho 10x speed (xem #16)
+- **Role-based default routing > neutral default** — auto-redirect manager (xem #16)
+- **Empty state = communication opportunity** — "Hệ thống bình thường" thay vì "No data" (xem #16)
 - (thêm dần khi gặp)
 
 ---
@@ -1756,7 +1761,128 @@ R6 double-safe idempotency.
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#16] <Next: T-015 Dashboards admin + manager + anomaly>
+## [#16] T-015 — Dashboards (admin overview + manager branch + anomalies)
+
+- **Date:** 2026-04-16
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** dashboard
+- **Phase:** feature (Day 4 task lớn)
+
+### Mục tiêu
+
+3 dashboard endpoints + 3 portal pages với charts (KPI cards, bar/line/heatmap). Reads từ `daily_attendance_summaries` (T-014 read model). Manager scope. Auto-redirect manager → branch dashboard.
+
+### Prompt
+
+Workflow 3 vòng + bug discovery trong smoke test.
+
+**Vòng 1 — Plan + 10 decisions:**
+
+```
+T-015 Dashboards. 3 endpoints + 3 pages + charts. Reuse T-014
+daily_attendance_summaries + anomaly Redis cache.
+10 decisions: charts library, heatmap impl, cache strategy, manager UX,
+refresh policy.
+```
+
+**Vòng 2 — Approve + 3 refinements + 1 verify:**
+
+```
+Approve 10/10 + 5 extras.
+R1. Bundle size watch (apexcharts +190KB → fit 1.5mb budget)
+R2. Smoke prereq: admin trigger daily-summary cron để populate data
+R3. Cache invalidation policy: accept 60s lag, không invalidate on cron
+V1. Verify apexcharts heatmap support hour 0-23 trước khi viết SQL
+```
+
+### AI sinh ra
+
+- **`libs/api/dashboard`**: service + controller + module + types + 7 specs
+- **3 endpoints**: admin overview / manager branch / anomalies
+- **Frontend portal**:
+  - `/dashboard` rewritten — 4 KPI cards + 2 horizontal bar charts + heatmap
+  - `/dashboard/branch/:id` (manager auto-redirect)
+  - `/anomalies` — 3 sections + manual refresh + empty state
+- **Charts library**: ng-apexcharts@2.4.0 (only Angular 20 option)
+- **Menu**: thêm "Dashboard" + "Bất thường" items
+- 7/7 backend tests + 4/4 backend smoke + 8/8 manual browser test
+
+### Vấn đề phát hiện khi review
+
+**Bug discovered: Prisma $queryRaw UUID cast missing**
+
+- Smoke test `week_trend` raw SQL fail với:
+  > Postgres error "operator does not exist: uuid = text"
+- **Root cause:** `WHERE branch_id = ${branchId}` — Prisma tagged template không auto-cast string parameter sang UUID khi compare với UUID column
+- **Fix:** explicit cast `WHERE branch_id = ${branchId}::uuid`
+- AI tự catch trong smoke test trước khi commit
+- **Lesson critical:** Khi dùng `$queryRaw` chống lại UUID columns, LUÔN cast string params explicitly (`::uuid`). Add vào CLAUDE.md raw SQL guidelines (R4).
+
+**Insight #1: Charts library lựa chọn bị ép buộc bởi Angular version**
+
+- AI verify peer deps: ngx-echarts + ng2-charts đều require Angular 21
+- Chỉ ng-apexcharts compat với Angular 20 (dự án ta pin Angular 20)
+- → Quyết định bị ép, không phải "chọn tốt nhất"
+- **Lesson:** version pinning sớm (T-001 chọn Angular 20 vì Ionic compat) ảnh hưởng cascade tới chart lib chọn — accept trade-off.
+
+**Insight #2: Read model > raw join cho dashboard performance**
+
+- Dashboard đọc từ `daily_attendance_summaries` (T-014 cron populate)
+- KHÔNG join raw `attendance_sessions` + `attendance_events`
+- → Query đơn giản, fast, predictable
+- T-014 cron là enabler cho T-015 dashboard scale
+- **Lesson:** read model pattern (CQRS-lite) cho dashboard là đáng đầu tư khi list view + aggregation. Tradeoff: 60s staleness cho 10x speed.
+
+**Insight #3: Manager auto-redirect = clean UX**
+
+- Admin /dashboard → admin overview
+- Manager /dashboard → auto-redirect /dashboard/branch/{ownBranchId}
+- Tránh bắt manager click thêm 1 lần để vào branch view
+- **Lesson:** role-based default routing tốt cho UX > "neutral default page".
+
+**Insight #4: Empty state design cho good news**
+
+- Anomaly empty payload (no anomalies) → "Hệ thống bình thường" + green icon
+- Không phải "No data" sterile message
+- **Lesson:** empty state = communication opportunity. Negative event empty = positive UX message.
+
+**Insight #5: Cache invalidation policy trade-off documented**
+
+- Admin trigger daily-summary cron → cache vẫn cũ tới 60s
+- Solution A (invalidate trên cron complete) vs B (accept lag)
+- Choose B cho MVP — đơn giản hơn, lag chấp nhận được cho dashboard "near real-time"
+- Document rõ trade-off trong commit
+- **Lesson:** không phải mọi cache invalidation đáng làm. Lag policy + document > complex invalidation logic.
+
+### Cách chỉnh sửa
+
+1. AI exec với 5 plan extras + 3 user refinements
+2. Smoke test catch UUID cast bug → fix `::uuid`
+3. Verify 4/4 backend smoke + manual browser test
+4. AI tự test all 8 browser cases (user delegate AI test thay vì manual)
+5. Commit `8bdd9c2` → CI pass → merge
+
+### Kết quả cuối cùng
+
+- Commit: `8bdd9c2` — `feat(dashboard): add admin overview + manager branch + anomalies UI`
+- Merge: `fc6ce97` — PR #14
+- Branch deleted
+- Test: 7/7 unit + 4/4 backend smoke + 8/8 manual + CI pass first try
+
+### Bài học rút ra
+
+- **Prisma `$queryRaw` against UUID columns LUÔN cast `::uuid` explicit** — auto-cast không hoạt động.
+- **Version pinning sớm cascade tới downstream choices** — Angular 20 → chart lib bị ép ng-apexcharts.
+- **Read model (CQRS-lite) cho dashboard scale** — 60s staleness cho 10x speed.
+- **Role-based default routing > neutral default** — manager auto-redirect = clean UX.
+- **Empty state = communication opportunity** — "Hệ thống bình thường" thay vì "No data".
+- **Cache invalidation policy: lag + document > complex invalidation** cho MVP.
+
+---
+
+<!-- Thêm entry mới ở dưới đây -->
+
+## [#17] <Next: T-016 CSV export>
 
 - **Date:**
 - **Tool:**
