@@ -26,6 +26,7 @@
       "@smart-attendance/api/dashboard": ["libs/api/dashboard/src/index.ts"],
       "@smart-attendance/api/employees": ["libs/api/employees/src/index.ts"],
       "@smart-attendance/api/jobs": ["libs/api/jobs/src/index.ts"],
+      "@smart-attendance/api/reports": ["libs/api/reports/src/index.ts"],
       "@smart-attendance/shared/constants": [
         "libs/shared/constants/src/index.ts"
       ],
