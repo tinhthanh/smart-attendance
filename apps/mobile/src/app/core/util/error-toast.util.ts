@@ -1,4 +1,5 @@
 import { ToastController } from '@ionic/angular/standalone';
+import { getRiskFlagInfo } from '@smart-attendance/shared/constants';
 
 const ERROR_MESSAGES: Record<string, string> = {
   INVALID_CREDENTIALS: 'Sai email hoặc mật khẩu',
@@ -14,17 +15,6 @@ const ERROR_MESSAGES: Record<string, string> = {
   FORBIDDEN: 'Bạn không có quyền',
 };
 
-const FLAG_MESSAGES: Record<string, (ctx: { distance?: number }) => string> = {
-  gps_outside_geofence: (c) =>
-    `Bạn ở xa chi nhánh ${c.distance != null ? c.distance + 'm' : ''}`,
-  wifi_mismatch: () => 'WiFi không phải của công ty',
-  mock_location: () => 'Vui lòng tắt chế độ giả lập vị trí',
-  accuracy_poor: () => 'Tín hiệu GPS yếu — hãy ra chỗ thoáng',
-  impossible_travel: () => 'Di chuyển bất thường — liên hệ quản lý',
-  device_untrusted: () => 'Thiết bị lần đầu sử dụng',
-  vpn_suspected: () => 'Phát hiện VPN — vui lòng tắt',
-};
-
 const FALLBACK = 'Lỗi hệ thống, vui lòng thử lại';
 
 export function errorMessage(err: unknown): string {
@@ -37,8 +27,11 @@ export function errorMessage(err: unknown): string {
 }
 
 export function flagMessage(flag: string, distance?: number): string {
-  const fn = FLAG_MESSAGES[flag];
-  return fn ? fn({ distance }) : flag;
+  const info = getRiskFlagInfo(flag);
+  if (flag === 'gps_outside_geofence' && distance != null) {
+    return `${info.description_vi} (cách ${distance}m)`;
+  }
+  return info.description_vi;
 }
 
 export async function showErrorToast(

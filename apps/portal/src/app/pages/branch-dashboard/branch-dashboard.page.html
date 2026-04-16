@@ -68,11 +68,9 @@
           <ion-label>
             <h3>{{ s.employee.name }} ({{ s.employee.code }})</h3>
             @if (s.risk_flags.length > 0) {
-            <p>
+            <p class="risk-flag-row">
               @for (f of s.risk_flags; track f) {
-              <ion-chip color="warning" style="height: 20px"
-                ><ion-label>{{ f }}</ion-label></ion-chip
-              >
+              <app-risk-flag-chip [flag]="f"></app-risk-flag-chip>
               }
             </p>
             }

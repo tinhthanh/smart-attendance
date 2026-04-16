@@ -52,7 +52,11 @@
       } @else {
       <ion-list>
         @for (b of d.branches_late_spike; track b.branch_id) {
-        <ion-item>
+        <ion-item
+          [routerLink]="['/dashboard/branch', b.branch_id]"
+          detail="true"
+          button="true"
+        >
           <ion-label>
             <h3>{{ b.name }}</h3>
             <p>
@@ -80,7 +84,11 @@
       } @else {
       <ion-list>
         @for (e of d.employees_low_trust; track e.employee_id) {
-        <ion-item>
+        <ion-item
+          [routerLink]="['/employees', e.employee_id]"
+          detail="true"
+          button="true"
+        >
           <ion-label>
             <h3>{{ e.code }}</h3>
             <p>{{ e.low_trust_count_7d }} phiên đáng nghi trong 7 ngày</p>

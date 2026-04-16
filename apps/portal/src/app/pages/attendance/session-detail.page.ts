@@ -42,6 +42,7 @@ import {
   SessionStatus,
   SessionWithEvents,
 } from '../../shared/types/attendance-session.types';
+import { RiskFlagChipComponent } from '../../shared/components/risk-flag-chip.component';
 import { OverrideSessionModal } from './override-session.modal';
 
 addIcons({
@@ -75,6 +76,7 @@ addIcons({
     IonIcon,
     IonText,
     IonSpinner,
+    RiskFlagChipComponent,
   ],
   templateUrl: './session-detail.page.html',
 })
