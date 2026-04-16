@@ -127,6 +127,13 @@ Mỗi entry theo format:
 - **Backward compat wrapper khi refactor shared utility** — giảm migration risk (xem #18)
 - **Severity scheme match data domain** — 4-tier > 3-tier khi có positive signals (xem #18)
 - **Single source of truth = compile-time Record + runtime fallback** — defensive design (xem #18)
+- **Docker image optimization đòi hỏi deep layer understanding** — Prisma v6 bundle all DBs, remove dead WASM (xem #19)
+- **Image size budget nên account stack reality** — NestJS+Prisma+Ionic < 400MB là optimized (xem #19)
+- **Zero-dep healthcheck với `node -e`** — tránh install wget/curl bloat (xem #19)
+- **Service-to-service env qua compose override, KHÔNG .env** — .env cho secrets only (xem #19)
+- **tini PID 1 BẮT BUỘC cho Node container long-running** — missing = stuck on restart (xem #19)
+- **Entrypoint script `exec "$@"` preserve PID 1** — without exec tini loses target (xem #19)
+- **Verify shutdown hooks TRƯỚC prod deploy** — bug chỉ hiện khi stop/restart (xem #19)
 - (thêm dần khi gặp)
 
 ---
@@ -2127,7 +2134,139 @@ R2. README anti-fraud section 3 paragraphs với 12-flag table
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#19] <Next: Day 5 — T-018 Production Docker>
+## [#19] T-018 — Production Dockerfiles + full docker-compose stack
+
+- **Date:** 2026-04-16
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** infra
+- **Phase:** feature (Day 5 start, 1-command deploy)
+
+### Mục tiêu
+
+Multi-stage Dockerfiles cho api + portal, nginx reverse proxy same-origin, Prisma migrate on boot, non-root user, tini PID 1. 1-command `docker compose up -d --build` → 4 services healthy trong 30s.
+
+### Prompt
+
+Workflow 3 vòng + 6 extras từ AI + 2 refinements từ user.
+
+**Vòng 1 — Plan + 10 decisions:**
+
+```
+T-018 Production Docker. Multi-stage Dockerfiles, nginx proxy, non-root,
+prisma migrate on boot. 10 decisions về Node image, proxy, migration,
+healthcheck, etc.
+```
+
+**Vòng 2 — Approve + 2 refinements + 2 risks acknowledge:**
+
+```
+Approve 10/10 + 6 extras.
+R1. Healthcheck dùng node -e http.get (zero-dep thay vì install wget)
+R2. .env.example dual mode (local vs docker compose override)
+V1. Webpack workspace refs — verify sau build
+V2. BullMQ graceful shutdown — follow-up nếu chưa wired
+```
+
+### AI sinh ra
+
+- **apps/api/Dockerfile** (3-stage): deps + build + runtime, tini PID 1, USER node, entrypoint migrate deploy
+- **apps/portal/Dockerfile** (2-stage): nx build → nginx:1.27-alpine
+- **docker/nginx.conf**: SPA fallback + gzip + reverse proxy + `proxy_buffering off` cho T-016 CSV streaming
+- **docker/api-entrypoint.sh**: `prisma migrate deploy && exec "$@"`
+- **.dockerignore** aggressive (800MB context → 15MB)
+- **docker-compose.yml** updated: 4 services với healthcheck chain
+- **.env.example** comment dual mode clarification
+- 8/8 smoke pass
+
+### Vấn đề phát hiện khi review
+
+**Insight #1: Image optimization tricks save 466MB (792 → 326MB)**
+
+- `COPY --chown=node:node` directly — avoid `chown -R` duplicate layer (-327MB)
+- `PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x` — skip multi-platform Prisma engines (-150MB)
+- Remove unused WASM query compilers (cockroachdb/mysql/sqlite/sqlserver, -25MB)
+- Trim date-fns locale to en-US + \_lib only (-12MB) — KEEP default locale.cjs để tránh runtime error
+- **Lesson:** Docker image optimization đòi hỏi deep understanding từng layer. Prisma v6 bundle tất cả DB engines → explicit remove cần thiết cho Alpine prod.
+
+**Insight #2: Image sizes over budget acceptable cho stack**
+
+- api: 326MB (target 300MB, over 8.7%)
+- portal: 52.4MB (target 50MB, over 4.8%)
+- Industry baseline NestJS+Prisma: 250-400MB → 326MB OK
+- Portal nginx alpine (25MB) + SPA bundle (25MB) ~= 50MB natural
+- **Lesson:** budget guidelines nên account stack reality. Node+Prisma+Ionic MVP < 400MB đã là optimized.
+
+**Insight #3: Zero-dep healthcheck với node -e**
+
+- Default node:20-alpine không có wget/curl
+- Option A: install (+1MB overhead)
+- Option B: `node -e "require('http').get(...)"` inline
+- Chọn B — keep lean
+- **Lesson:** healthcheck dùng built-in Node runtime tránh install bloat. Trade-off: longer CMD string vs cleaner image.
+
+**Insight #4: Dual-mode env config (local vs docker)**
+
+- Local dev: DATABASE_URL=...@localhost:5433/...
+- Docker compose: service-to-service hostnames (postgres, redis)
+- Solution: compose overrides env vars trực tiếp trong service block, không rely .env for internal URLs
+- .env còn lại cho secrets only (POSTGRES*PASSWORD, JWT*\*)
+- **Lesson:** service-to-service connection strings KHÔNG trong .env — compose overrides cleaner. User chỉ quản lý secrets.
+
+**Insight #5: tini PID 1 cho signal handling**
+
+- Node process PID 1 trong Docker KHÔNG reap zombie processes + KHÔNG forward SIGTERM đúng
+- tini (`--init` flag hoặc manual ENTRYPOINT ["/sbin/tini", "--"]) fix cả 2
+- Critical cho graceful shutdown BullMQ workers
+- **Lesson:** Container với long-running Node process phải có tini (hoặc docker run --init). Missing signal forwarding = stuck pod on restart.
+
+**Insight #6: Entrypoint script pattern cho Prisma migration**
+
+- `sh -c "prisma migrate deploy && node dist/main.js"` vs init container
+- Init container: clean separation nhưng over-engineering cho MVP
+- Entrypoint script: simple, idempotent (migrate deploy skip nếu up-to-date)
+- `exec "$@"` preserve PID 1 cho tini → signal forwarding working
+- **Lesson:** entrypoint script với `exec` preserves PID 1 hierarchy. Without exec → double fork, tini loses target.
+
+**Insight #7: BullMQ graceful shutdown incomplete (V2 acknowledged)**
+
+- tini forwards SIGTERM đúng
+- NHƯNG: NestJS `app.enableShutdownHooks()` KHÔNG được call trong main.ts
+- BullMQ WorkerHost KHÔNG có `onModuleDestroy` handler đóng connection
+- Effect: `docker stop api` → immediate exit, không log "closed gracefully"
+- **Not blocking MVP deploy** — follow-up T-020 sẽ fix
+- **Lesson:** Dockerize backend cần verify shutdown hooks TRƯỚC prod. Bug chỉ hiện ra khi test stop/restart, không phải boot.
+
+### Cách chỉnh sửa
+
+1. AI exec với 6 extras built-in (tini, pnpm --prod, WASM trim)
+2. Verify 8/8 smoke pass
+3. Size optimization pass (4 tricks → 792MB → 326MB)
+4. Accept size slightly over (8.7% api, 4.8% portal) như industry baseline
+5. Commit `551a138` → CI pass → merge
+
+### Kết quả cuối cùng
+
+- Commit: `551a138` — `feat(infra): add production Dockerfiles + full docker-compose stack`
+- Merge: `8172626` — PR #17
+- Branch deleted
+- Test: 8/8 smoke + CI pass
+- Image: api 326MB, portal 52.4MB
+
+### Bài học rút ra
+
+- **Docker image optimization đòi hỏi deep layer understanding** — Prisma v6 bundle all DBs, explicit remove cần thiết cho Alpine prod.
+- **Image size budget nên account stack reality** — NestJS+Prisma+Ionic MVP < 400MB đã là optimized baseline.
+- **Zero-dep healthcheck với `node -e`** — tránh install wget/curl bloat.
+- **Service-to-service env vars qua compose override, KHÔNG .env** — .env cho secrets only.
+- **tini PID 1 BẮT BUỘC** cho Node container long-running — missing = stuck on restart.
+- **Entrypoint script `exec "$@"` preserve PID 1** — without exec → tini loses target.
+- **Verify shutdown hooks TRƯỚC prod deploy** — bug chỉ hiện khi stop/restart, không phải boot.
+
+---
+
+<!-- Thêm entry mới ở dưới đây -->
+
+## [#20] <Next: T-019 README polish + demo script>
 
 - **Date:**
 - **Tool:**
