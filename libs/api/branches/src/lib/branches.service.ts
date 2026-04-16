@@ -5,16 +5,14 @@ import {
   BusinessException,
   ErrorCode,
   PrismaService,
+  UserRolesContext,
   buildPaginationMeta,
+  getManagerBranchIds,
+  isAdmin,
 } from '@smart-attendance/api/common';
 import { CreateBranchDto } from './dto/create-branch.dto';
 import { ListBranchesQueryDto } from './dto/list-branches-query.dto';
 import { UpdateBranchDto } from './dto/update-branch.dto';
-import {
-  UserRolesContext,
-  getManagerBranchIds,
-  isAdmin,
-} from './branch-scope.helper';
 
 export interface RequestCtx {
   ipAddress?: string;

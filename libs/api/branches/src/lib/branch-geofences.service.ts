@@ -8,7 +8,7 @@ import {
 } from '@smart-attendance/api/common';
 import { CreateGeofenceDto } from './dto/create-geofence.dto';
 import { BranchesService, RequestCtx } from './branches.service';
-import { UserRolesContext, isAdmin } from './branch-scope.helper';
+import { UserRolesContext, isAdmin } from '@smart-attendance/api/common';
 
 @Injectable()
 export class BranchGeofencesService {

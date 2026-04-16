@@ -1,4 +1,4 @@
-import { PrismaService } from '@smart-attendance/api/common';
+import { PrismaService } from './prisma.service';
 
 export interface UserRolesContext {
   id: string;
