@@ -82,6 +82,10 @@ Mỗi entry theo format:
 - **Friendly 409 pre-check với {field, value} details** > catch-and-rewrite Prisma P2002 (xem #08)
 - **Monorepo internal: re-export shim hiếm khi justified** — prefer delete + grep-update (xem #08)
 - **Cross-field validation: dùng class-validator custom constraint class**, không hack service (xem #08)
+- **100% coverage → remove dead branch** > ignore comment; dead branch là chỉ báo dead code (xem #09)
+- **Export intermediate helpers** = bonus testability + documentation về logic components (xem #09)
+- **Extract MỌI magic number** cho core business logic lib — không phải "nice-to-have" (xem #09)
+- **Purity verify tĩnh (grep) + động (test)** cho core lib — đáng đầu tư (xem #09)
 - (thêm dần khi gặp)
 
 ---
@@ -932,7 +936,124 @@ tạo dead code ma lực.
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#09] <Next: T-008 Trust Score utility>
+## [#09] T-008 — Trust Score pure function + haversine geo helpers
+
+- **Date:** 2026-04-16
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** shared
+- **Phase:** feature (core business logic)
+
+### Mục tiêu
+
+`computeTrustScore(input)` pure function implement toàn bộ rule `docs/spec.md §5.1, §5.2, §6` với 100% test coverage. Task ngắn nhất Day 2 (30') nhưng core nhất về business logic — T-009 (Attendance) depends on.
+
+### Prompt
+
+Workflow 3 vòng gọn, task pure nên không có decision về module/deps.
+
+**Vòng 1 — Plan + 10 decisions:**
+
+```
+Bắt đầu T-008 (Trust Score utility — pure function). Workflow chuẩn 3 vòng
+nhưng nhẹ hơn vì pure function không dependency Nest/Prisma.
+PRE-WORK: đọc KỸ docs/spec.md §5.1 §5.2 §6, verify libs/shared/utils từ T-001.
+Plan: file structure (geo.ts + trust-score.ts + types + specs), weight
+constants extract, logic flow (haversine → geofence → wifi → impossible_travel
+→ score → level), test matrix (boundary 69/70, 39/40, all flags combined).
+10 decisions: constants placement, accuracy thresholds, impossible travel
+formula, WiFi priority, mock exclusivity, undefined accuracy, isHardValid
+coupling, history null, VPN weight, device exclusivity.
+Ràng buộc: PURE, 100% coverage, no Date.now() inside, extract all magic.
+```
+
+**Vòng 2 — 3 refinements + 2 clarifications:**
+
+```
+R1. Export haversineDistance từ geo.ts riêng (reuse T-009 + test riêng)
+R2. JSDoc cho public API (computeTrustScore với @example)
+R3. Test coverage verification (jest --coverage, document % trong commit)
+Q1. currentEventAt type: Date | number union (không string)
+Q2. TrustLevel type export để T-009 import cho DTO
+```
+
+### AI sinh ra
+
+- **`libs/shared/utils/src/lib/geo.ts`** — `haversineDistance(lat1, lng1, lat2, lng2): meters` + `EARTH_RADIUS_M=6371000`
+- **`libs/shared/utils/src/lib/trust-score.types.ts`** — `TrustLevel`, `ValidationMethod`, `TrustFlag`, input/output interfaces
+- **`libs/shared/utils/src/lib/trust-score.ts`** — `computeTrustScore` với JSDoc + `@example`, plus exported helpers (`isInsideGeofence`, `isWifiMatched`, `detectImpossibleTravel`)
+- **`libs/shared/utils/src/lib/{geo,trust-score}.spec.ts`** — 50 tests
+- Removed Nx boilerplate `utils.ts` / `utils.spec.ts`
+- Coverage 100% statements/branches/functions/lines
+
+### Vấn đề phát hiện khi review
+
+**Insight #1: AI chủ động remove dead branch để đạt 100% coverage**
+
+- `upgradeMethod` có branch `if (current === addition) return addition;` — unreachable dưới call pattern của `computeTrustScore`
+- Nếu giữ: không bao giờ test được → < 100% coverage hoặc phải `/* istanbul ignore next */`
+- AI remove branch thay vì hack ignore comment
+- **Lesson:** dead branch detection cho 100% coverage là chỉ báo tốt về dead code trong logic. Remove > ignore comment.
+
+**Insight #2: Pure function test structure theo describe block**
+
+- 50 tests organized: geo (5) → isInsideGeofence (5) → isWifiMatched (7) → detectImpossibleTravel (4) → computeTrustScore (29)
+- Mỗi helper export riêng → test unit-level isolation
+- Top-level `computeTrustScore` test combine flags → integration
+- **Lesson:** export intermediate pure functions không chỉ giúp test — còn làm tài liệu sống về bộ phận cấu thành logic.
+
+**Insight #3: Weight constants + threshold constants extract hết**
+
+- AI tự extract TẤT CẢ magic number theo ràng buộc prompt:
+  - `WEIGHTS.{GPS_IN_GEOFENCE_HIGH_ACCURACY, BSSID_MATCH, MOCK_LOCATION, ...}`
+  - `ACCURACY_HIGH_THRESHOLD_M=20`, `ACCURACY_MODERATE_THRESHOLD_M=100`
+  - `TRUST_LEVEL_TRUSTED_MIN=70`, `TRUST_LEVEL_REVIEW_MIN=40`
+  - `IMPOSSIBLE_TRAVEL_SPEED_KMH=120`, `EARTH_RADIUS_M`, `MS_PER_HOUR`
+- **Lesson:** ràng buộc "extract MỌI magic number" trong prompt rõ → AI không bỏ sót. Magic number = tech debt, extract cần sớm.
+
+**Insight #4: Purity proven qua grep test + runtime behavior**
+
+- AI tự verify purity: `grep` cho `@nestjs|@prisma|@smart-attendance/api/*` → không match
+- Runtime: không có `Date.now()` / `console.log` / mutation input
+- **Lesson:** purity guarantee có thể verify tĩnh (grep) + động (test cùng input → same output). Đáng làm khi build core business logic lib.
+
+**Insight #5: Boilerplate cleanup bắt buộc khi lib grown up**
+
+- Nx generator tạo `utils.ts` / `utils.spec.ts` placeholder từ T-001
+- Sau T-008 có real content → boilerplate become dead code
+- User (human) catch trong review → remove 2 file + update `index.ts`
+- **Lesson:** Nx generator boilerplate nên remove ngay khi lib có real content, không để lẫn → confusion về public API.
+
+### Cách chỉnh sửa
+
+1. `pnpm nx reset && pnpm nx test utils --coverage`
+2. Verify 100% — IN coverage report
+3. Grep purity check
+4. Sample 3 output scenarios (trusted/review/suspicious)
+5. Human remove utils.ts boilerplate trước commit
+6. Commit `3847bef` — 7 files (6 new + 1 update + 2 delete)
+7. PR #7 → CI pass → merge
+
+### Kết quả cuối cùng
+
+- Commit: `3847bef` — `feat(shared): add Trust Score pure function + haversine geo helpers`
+- Merge: `76ce6c5` — PR #7
+- Branch deleted
+- Test: 50/50, 100% coverage cho cả 2 file, lint clean
+- **T-009 unblocked** — AttendanceService có thể `import { computeTrustScore } from '@smart-attendance/shared/utils'` ngay
+
+### Bài học rút ra
+
+- **100% coverage bắt buộc → AI tự remove dead branch** thay vì hack ignore comment. Đây là chỉ báo tốt về dead code.
+- **Export intermediate helpers (không chỉ top-level fn)** = bonus testability + documentation về logic components.
+- **Extract magic number là ràng buộc bắt buộc cho core business logic**, không phải "nice-to-have". Prompt explicit "extract MỌI magic" giúp AI không bỏ sót.
+- **Purity verify tĩnh (grep) + động (deterministic test)** cho core lib — đáng đầu tư.
+- **Nx generator boilerplate nên remove ngay khi lib grown up** — không để lẫn với real API, clean public surface.
+
+---
+
+<!-- Thêm entry mới ở dưới đây -->
+
+## [#10] <Next: T-009 Attendance check-in/out — Day 2 closeout>
 
 - **Date:**
 - **Tool:**
