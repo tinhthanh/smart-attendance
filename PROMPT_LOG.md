@@ -79,6 +79,9 @@ Mỗi entry theo format:
 - **Separation of concerns module:** business service không ở module infrastructure (Prisma/HTTP) (xem #07)
 - **AI self-audit khả thi** khi prompt yêu cầu "known issues" explicit trong output (xem #07)
 - **Pattern reuse accelerates velocity** — task sau của cùng domain ít push back hơn (T-005 → T-006) (xem #07)
+- **Friendly 409 pre-check với {field, value} details** > catch-and-rewrite Prisma P2002 (xem #08)
+- **Monorepo internal: re-export shim hiếm khi justified** — prefer delete + grep-update (xem #08)
+- **Cross-field validation: dùng class-validator custom constraint class**, không hack service (xem #08)
 - (thêm dần khi gặp)
 
 ---
@@ -812,7 +815,124 @@ R1. AuditLogService API design: cần 2 method — .log() và
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#08] <Next: T-007 Employees CRUD>
+## [#08] T-007 — Employees CRUD + Assignments + Devices + Atomic Create
+
+- **Date:** 2026-04-16
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** employees
+- **Phase:** feature
+
+### Mục tiêu
+
+6 endpoints employees CRUD + sub-resources (assignments, devices), atomic 7-step create với rollback verified, move scope helper từ branches → common, reuse tối đa pattern T-006.
+
+### Prompt
+
+Workflow 3 vòng rút gọn hơn nữa — pattern quá rõ ràng từ T-006, chỉ cần confirm 10 decisions + 3 extras + 1 open question.
+
+**Vòng 1 — Plan + 10 decisions:**
+
+```
+Bắt đầu T-007 (Employees CRUD). Workflow chuẩn 3 vòng.
+PRE-WORK: verify state sau T-006 (libs/api/common đã có AuditLogService
+tx variant, pagination util, snake_case meta; libs/api/branches có scope
+helper pattern → có move sang common không?).
+Lập plan với 10 quyết định + 4 refinements:
+R1. Validate assignment dates (from < to)
+R2. Scope helper rename khi move: giữ branch-scope.helper.ts
+R3. POST role='admin' → allow + audit note explicit
+R4. Employee code + email unique → friendly 409 ErrorCodes
+```
+
+**Vòng 2 — Choose re-export vs delete:**
+
+```
+Approve 10/10 + 3 extras.
+Open question → chọn (b) DELETE branch-scope.helper.ts trong branches,
+update direct imports. Lý do: monorepo internal, re-export indirection
+tạo dead code ma lực.
+```
+
+### AI sinh ra
+
+- **`libs/api/employees`**: 3 services + 3 controllers + 5 DTOs + 1 spec (13 files, 11 tests)
+- **Moved** `branch-scope.helper.ts` → `libs/api/common/src/lib/`
+- **Updated** `libs/api/branches/*.service.ts` import path (3 files)
+- **ErrorCode**: `EMPLOYEE_CODE_TAKEN`, `EMAIL_TAKEN` với `{field, value}` details
+- **Custom validator** `EffectiveToAfterFromConstraint` cho assignment dates
+- Atomic 7-step `$transaction` create verified rollback
+- 39/39 workspace tests pass, 8/8 smoke pass
+
+### Vấn đề phát hiện khi review
+
+**Insight #1: Pattern reuse rõ rệt giảm overhead**
+
+- T-005: 3 vòng push back (10 decisions + 2 rounds refinement)
+- T-006: 2 vòng push back (10 decisions + 1 round refinement)
+- T-007: 2 vòng (10 decisions + 1 round refinement + 1 open question)
+- Thời gian plan giảm 40% so với T-005
+- **Lesson:** task trong cùng "family" (CRUD pattern) → 1 plan canonical, các task sau diverge chỉ ở rule nghiệp vụ riêng.
+
+**Insight #2: Friendly 409 với field+value details là UX cực tốt**
+
+- Prisma P2002 unique constraint → throw generic
+- Service pre-check trước insert → throw `BusinessException` với `details: { field, value }`
+- Client FE biết chính xác field nào bị duplicate → highlight input error
+- **Lesson:** pre-check + friendly error thắng catch-and-rewrite P2002 vì:
+  - Atomic context còn nguyên (trong $transaction)
+  - Error message user-friendly ngay từ API
+
+**Insight #3: Re-export vs delete — pick explicit removal**
+
+- Open question: re-export từ branches để zero-change clients, hay delete sạch
+- User push back chọn delete: monorepo internal, không có external consumer, re-export indirection = "ma lực kéo dead code"
+- AI update 3 import sites + delete file
+- **Lesson:** trong monorepo internal, `@deprecated re-export` hiếm khi justified. Grep + update là cheap.
+
+**Insight #4: Custom class-validator constraint for cross-field**
+
+- Assignment cần `effective_to > effective_from` — không phải single-field validation
+- Solution: `@ValidatorConstraint({ name: 'effectiveToAfterFrom' })` class implement `ValidatorConstraintInterface`
+- Apply qua `@Validate(EffectiveToAfterFromConstraint)` ở top của DTO class
+- **Lesson:** class-validator hỗ trợ cross-field validation qua custom constraint class — không cần hack service-level check.
+
+**Insight #5: Admin creating admin — security note pattern**
+
+- D-extra-1: POST role='admin' allow nhưng audit
+- AI implement với audit log note: `"Super-admin creation: actor=<uuid> created admin=<email>"`
+- Business review cho MVP: OK vì chỉ admin mới gọi được + audit đầy đủ
+- Note cho bonus task: 2FA hoặc approval flow cho admin creation
+- **Lesson:** không phải mọi edge case cần block ở MVP. Audit + document pattern cho phép defer quyết định bảo mật tới khi có dữ liệu usage.
+
+### Cách chỉnh sửa
+
+1. `pnpm nx reset && nx run-many --target=test --all` trước commit
+2. Smoke 8 scenarios (6 positive + 2 negative + 1 atomic rollback DB verify)
+3. Atomic rollback: fake primary_branch_id → 404 → DB grep orphans = 0 ✅
+4. Commit `986b559` — 31 files format qua lint-staged
+5. PR #6 → CI pass → merge
+
+### Kết quả cuối cùng
+
+- Commit: `986b559` — `feat(employees): add CRUD + assignments + devices + atomic create`
+- Merge: `12ae5f1` — PR #6
+- Branch deleted
+- Test: 39/39 workspace + 8/8 smoke + CI pass
+- Backend CRUD cho 3 module chính (auth + branches + employees) xong
+
+### Bài học rút ra
+
+- **Task trong cùng family → overhead giảm dần** (T-005 3 vòng → T-007 2 vòng). Plan canonical trong lib đầu tiên của family là đáng đầu tư.
+- **Friendly error pre-check > catch-and-rewrite P2002:** field+value details giúp FE UX tốt hơn.
+- **Monorepo internal: re-export shim hiếm khi justified** — grep + update cheap, tránh dead code.
+- **Cross-field validation dùng class-validator custom constraint**, không hack service.
+- **Security edge case (admin creating admin): audit + document > block**, defer hard rule tới khi có usage data.
+
+---
+
+<!-- Thêm entry mới ở dưới đây -->
+
+## [#09] <Next: T-008 Trust Score utility>
 
 - **Date:**
 - **Tool:**
