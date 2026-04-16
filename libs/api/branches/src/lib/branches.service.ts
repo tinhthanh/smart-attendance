@@ -2,6 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import {
   AuditLogService,
+  BranchConfigCacheService,
   BusinessException,
   ErrorCode,
   PrismaService,
@@ -37,7 +38,8 @@ type BranchRow = {
 export class BranchesService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly audit: AuditLogService
+    private readonly audit: AuditLogService,
+    private readonly cache: BranchConfigCacheService
   ) {}
 
   async list(user: UserRolesContext, query: ListBranchesQueryDto) {
@@ -191,6 +193,7 @@ export class BranchesService {
         ipAddress: ctx.ipAddress,
         userAgent: ctx.userAgent,
       });
+      await this.cache.invalidate(id);
       return this.toBranchResponse({
         ...after,
         wifiConfigs: [],
@@ -241,6 +244,7 @@ export class BranchesService {
         ipAddress: ctx.ipAddress,
         userAgent: ctx.userAgent,
       });
+      await this.cache.invalidate(id);
       return { success: true };
     });
   }

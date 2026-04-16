@@ -2,20 +2,23 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import {
   AuditLogService,
+  BranchConfigCacheService,
   BusinessException,
   ErrorCode,
   PrismaService,
+  UserRolesContext,
+  isAdmin,
 } from '@smart-attendance/api/common';
 import { CreateGeofenceDto } from './dto/create-geofence.dto';
 import { BranchesService, RequestCtx } from './branches.service';
-import { UserRolesContext, isAdmin } from '@smart-attendance/api/common';
 
 @Injectable()
 export class BranchGeofencesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditLogService,
-    private readonly branches: BranchesService
+    private readonly branches: BranchesService,
+    private readonly cache: BranchConfigCacheService
   ) {}
 
   async list(user: UserRolesContext, branchId: string) {
@@ -78,6 +81,7 @@ export class BranchGeofencesService {
         ipAddress: ctx.ipAddress,
         userAgent: ctx.userAgent,
       });
+      await this.cache.invalidate(branchId);
       return {
         id: row.id,
         name: row.name,
