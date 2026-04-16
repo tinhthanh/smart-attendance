@@ -1,13 +1,16 @@
-import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { NxWelcome } from './nx-welcome';
+import { Component, OnInit, inject } from '@angular/core';
+import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
+import { AuthService } from './core/auth/auth.service';
 
 @Component({
-  imports: [NxWelcome, RouterModule],
+  imports: [IonApp, IonRouterOutlet],
   selector: 'app-root',
-  templateUrl: './app.html',
-  styleUrl: './app.scss',
+  template: '<ion-app><ion-router-outlet></ion-router-outlet></ion-app>',
 })
-export class App {
-  protected title = 'portal';
+export class App implements OnInit {
+  private readonly auth = inject(AuthService);
+
+  async ngOnInit() {
+    await this.auth.initFromStorage();
+  }
 }
