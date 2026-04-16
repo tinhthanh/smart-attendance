@@ -104,6 +104,9 @@ Mỗi entry theo format:
 - **Auth pattern stable = template chung** — đáng investment khi reuse 3+ lần (xem #13)
 - **Platform abstraction qua service** — graceful web vs native fallback (xem #13)
 - **Pattern reuse + lessons applied = CI pass first try** — T-012 không CI fail (xem #13)
+- **Default filter cho list endpoints với nhiều records** — tránh load all (xem #14)
+- **Destructive/audit-impact action cần preview + warning UX** — không chỉ button click (xem #14)
+- **Environment gotcha document** — Mac sleep/wake port conflict, future smoke không stuck (xem #14)
 - (thêm dần khi gặp)
 
 ---
@@ -1519,7 +1522,117 @@ L1-L3. Web mode permission notes (HTTPS not required for localhost,
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#14] <Next: T-013 History views portal>
+## [#14] T-013 — Portal Attendance Sessions (list + detail + override) — Day 3 closeout
+
+- **Date:** 2026-04-16
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** portal
+- **Phase:** feature (Day 3 cuối)
+
+### Mục tiêu
+
+Portal attendance UI: list + detail với events timeline + manager override modal với audit log. Mobile history đã có sẵn từ T-012 → scope narrow to portal only. Task nhỏ nhất Day 3 nhưng dense về UX detail.
+
+### Prompt
+
+Workflow 3 vòng rất gọn — pattern T-011 đã dày đủ để reuse.
+
+**Vòng 1 — Plan + 10 decisions:**
+
+```
+T-013 History views. Mobile history DONE T-012 → scope narrow to portal.
+Plan: 3 pages + 1 service + override modal. Reuse T-011 pattern hoàn toàn.
+10 decisions với recommend.
+```
+
+**Vòng 2 — Approve + 3 refinements:**
+
+```
+Approve 10/10 + 4 extras.
+R1. Override modal preview status before/after + audit warning
+R2. Date defaults 7 ngày + quick filter buttons + client validation
+R3. Empty states VN cho list + detail 404
+```
+
+### AI sinh ra
+
+- **3 pages**: sessions-list, session-detail, override-session.modal
+- **1 API service**: attendance.api.service.ts (list/get/override)
+- **Types** FE-only: Session, Event, Query, OverrideDto
+- **Menu**: "Chấm công" với time-outline icon
+- **Quick filter buttons**: Hôm nay / 7 ngày / 30 ngày
+- **Events timeline**: vertical list với color-coded icons (check-in/out/failed)
+- **Override preview**: chips "current → new" + audit warning
+- Manual test 8/8 pass
+
+### Vấn đề phát hiện khi review
+
+**Insight #1: Default filter phải có — tránh load full dataset**
+
+- List endpoint trả 210 sessions từ seed → nếu không default filter, user đợi lâu
+- Solution: default 7-day filter + quick filter buttons
+- **Lesson:** list endpoints với nhiều records → PHẢI có default filter hợp lý, không phải "load all rồi user filter".
+
+**Insight #2: Action với audit trail cần preview + warning**
+
+- Override là destructive-feeling action (ghi đè status + audit log vĩnh viễn)
+- AI add preview chips "current → new" + warning text
+- User phải "hiểu rõ" trước submit — UX tốt cho compliance
+- **Lesson:** destructive/audit-impact action cần confirm UX rõ ràng, không phải "click button done".
+
+**Insight #3: Pattern reuse đạt "zero bug" trong task này**
+
+- T-013 không có bug nào caught trong manual test (lần đầu từ T-010)
+- Lý do:
+  - URL query sync pattern T-011 proven
+  - APP_INITIALIZER đã fix từ T-011
+  - Error toast helper đã có 17 codes (no new)
+  - Manager scope badge pattern replicated
+- **Lesson:** mature pattern + lessons applied → velocity tăng + bug giảm. T-013 là evidence cho investment-in-patterns paid off.
+
+**Insight #4: Port 3000 conflict (Mac sleep/wake artifact)**
+
+- Orphan API process từ session trước vẫn hold port 3000
+- AI fix bằng `pkill -9 -f "nx serve api" + sleep + restart`
+- Không phải code bug, là developer environment issue
+- **Lesson:** document environment gotcha để future Day 4-5 smoke test không bị stuck.
+
+### Cách chỉnh sửa
+
+1. AI exec với pattern T-011 + override modal specific
+2. Manual test 8 cases (admin + manager + filter + override)
+3. User pass all 8 → commit `78d8ad6` → CI pass → merge
+4. Không bug caught (first time, pattern reuse mature)
+
+### Kết quả cuối cùng
+
+- Commit: `78d8ad6` — `feat(portal): add attendance sessions list + detail + manager override`
+- Merge: `4223419` — PR #12
+- Branch deleted
+- Test: manual 8/8 + CI pass first try
+
+**Day 3 closeout summary:**
+
+- T-010 → T-013: Frontend hoàn thành 100% cho MVP
+- Portal: login, branches CRUD, employees CRUD, attendance sessions, override
+- Mobile: login, check-in/out with GPS + trust score, history, profile
+- 4 PRs merged (T-010/T-011/T-012/T-013), 2 với CI fix sau commit (T-010, T-011)
+- Pattern maturity rõ: T-010 fix, T-011 fix+bug, T-012 zero-bug, T-013 zero-bug
+- PROMPT_LOG grown từ 10 → 14 entries, 15 insights mới về FE workflow
+
+### Bài học rút ra
+
+- **Default filter cho list endpoints với nhiều records** — tránh load all.
+- **Destructive/audit-impact action cần preview + warning UX**, không chỉ button click.
+- **Pattern reuse → velocity cao + bug giảm** (T-013 zero-bug first time trong Day 3).
+- **Environment gotcha document để future smoke test** không stuck (Mac sleep/wake port conflict).
+- **Frontend MVP 100% done sau 4 tasks Day 3** — ready cho Day 4 (dashboards + cron + CSV export).
+
+---
+
+<!-- Thêm entry mới ở dưới đây -->
+
+## [#15] <Next: Day 4 — T-014 Cron jobs (BullMQ)>
 
 - **Date:**
 - **Tool:**
