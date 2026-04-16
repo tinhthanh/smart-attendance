@@ -50,6 +50,9 @@
     "serve": {
       "continuous": true,
       "executor": "@angular/build:dev-server",
+      "options": {
+        "proxyConfig": "apps/portal/proxy.conf.json"
+      },
       "configurations": {
         "production": {
           "buildTarget": "portal:build:production"
