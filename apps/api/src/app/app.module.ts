@@ -7,9 +7,10 @@ import {
   JwtAuthGuard,
   RolesGuard,
 } from '@smart-attendance/api/auth';
+import { BranchesModule } from '@smart-attendance/api/branches';
 import {
+  CommonModule,
   HttpExceptionFilter,
-  PrismaModule,
   ResponseTransformInterceptor,
 } from '@smart-attendance/api/common';
 import { AppController } from './app.controller';
@@ -24,8 +25,9 @@ import { envValidationSchema } from './env.validation';
       validationOptions: { abortEarly: true },
     }),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
-    PrismaModule,
+    CommonModule,
     AuthModule,
+    BranchesModule,
   ],
   controllers: [AppController],
   providers: [
