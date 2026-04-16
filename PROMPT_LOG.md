@@ -76,6 +76,9 @@ Mỗi entry theo format:
 - **Nx cache local HIDE test failures** mà CI sẽ catch — trước commit task lớn `pnpm nx reset && nx run-many --target=test --all` (xem #06)
 - **AI proactive về bảo mật khi prompt nhấn "đặc biệt cẩn thận"** — không cần chỉ định từng pattern (refresh rotation, replay detection) (xem #06)
 - **Library type churn:** cast với comment + defer là acceptable pattern (xem #06)
+- **Separation of concerns module:** business service không ở module infrastructure (Prisma/HTTP) (xem #07)
+- **AI self-audit khả thi** khi prompt yêu cầu "known issues" explicit trong output (xem #07)
+- **Pattern reuse accelerates velocity** — task sau của cùng domain ít push back hơn (T-005 → T-006) (xem #07)
 - (thêm dần khi gặp)
 
 ---
@@ -695,7 +698,121 @@ R3. Test naming "should <expected> when <condition>" (CLAUDE.md §4.6).
 
 <!-- Thêm entry mới ở dưới đây -->
 
-## [#07] <Next: T-006 Branches CRUD>
+## [#07] T-006 — Branches CRUD + WiFi/Geofence + Manager Scope + Audit
+
+- **Date:** 2026-04-16
+- **Tool:** Claude Code (Sonnet, agent mode)
+- **Module:** branches
+- **Phase:** feature
+
+### Mục tiêu
+
+10 endpoints CRUD branches + sub-resource wifi-configs/geofences, manager scope (own branches only), soft delete với 409 khi còn employee active, audit log atomic, tái sử dụng tối đa infra từ T-005.
+
+### Prompt
+
+Workflow 3 vòng nhưng rút gọn hơn T-005 vì pattern đã established.
+
+**Vòng 1 — Pre-work + plan + 10 decisions:**
+
+```
+Bắt đầu T-006 (Branches CRUD). Workflow chuẩn 3 vòng.
+PRE-WORK: verify state sau T-005 (libs/api/common đã có Prisma/interceptor/
+filter/errors, libs/api/auth đã có guards/decorators — REUSE hết).
+Lập plan với 10 quyết định: lib structure (gộp hay tách 3 services?),
+manager scope (helper vs guard), soft delete cascade?, AuditLogService
+placement, validation messages language, sort default, /restore endpoint,
+search pattern, geofence overlap check, check-in radius source.
+Lessons learned từ T-005: pnpm nx reset trước test cuối, naming convention,
+cast+comment+defer pattern.
+```
+
+**Vòng 2 — Push back trên AuditLogService placement:**
+
+```
+Approve 10/10 + 3 extras.
+Open question — AuditLogService placement: KHÔNG bỏ vào PrismaModule.
+PrismaModule là infrastructure, không nên chứa business logic.
+Đề xuất: Add vào libs/api/common's CommonModule (cùng cấp PrismaService).
+R1. AuditLogService API design: cần 2 method — .log() và
+    .logInTransaction(tx, input) — version tx BẮT BUỘC cho atomic op.
+```
+
+### AI sinh ra
+
+- **`libs/api/branches`**: 1 module + 3 controllers + 3 services + scope helper + 5 DTOs + 1 spec (11 tests)
+- **`libs/api/common` additions**:
+  - `AuditLogService` — `.log()` + `.logInTransaction(tx, input)` với TxClient type chính xác (Omit PrismaClient với các `$*` method)
+  - `pagination.util.ts` — `buildPaginationMeta()`
+  - **Merged PrismaModule → CommonModule @Global()** (single source of global providers)
+  - BREAKING: `PaginationMeta.totalPages` → `total_pages` (snake_case match api-spec §1.3)
+- **`ErrorCode.BRANCH_HAS_ACTIVE_EMPLOYEES`**
+- Dep `+@nestjs/mapped-types@2.1.1` cho `PartialType(CreateBranchDto)`
+- 11 unit tests pass, 7/7 smoke pass
+
+### Vấn đề phát hiện khi review
+
+**Insight #1: AI propose design lệch — user kéo lại**
+
+- Vòng 2 AI lean "put AuditLogService in PrismaModule"
+- Push back: PrismaModule là infrastructure (connection lifecycle), không nên chứa business logic
+- Resolution: gộp vào CommonModule (đã @Global) — PrismaService + AuditLogService cùng provider pool
+- **Lesson:** separation of concerns quan trọng hơn "least modules". Business service không ở module infrastructure.
+
+**Insight #2: AI tự propose tx variant chính xác**
+
+- R1 refinement đặt ra: cần `.logInTransaction(tx, input)` version
+- AI implement với type `TxClient = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>` — chính xác kiểu tx internal của Prisma
+- **Lesson:** prompt đề cập `$transaction` pattern → AI hiểu đúng type implication của tx argument.
+
+**Insight #3: AI tự flag latent bug**
+
+- `getManagerBranchIds` không filter `effective_from <= today`
+- Seed không có future-dated assignment → bug latent, không fail test
+- AI tự flag trong commit message ("Known gap, non-blocking")
+- **Lesson:** AI có thể self-audit nếu prompt yêu cầu "known issues" explicit.
+
+**Insight #4: DeepMockProxy + Prisma $transaction overload**
+
+- jest-mock-extended không mock cleanly được `$transaction(async (tx) => ...)` overload — tx argument undefined trong vài assertion
+- AI workaround: check `mock.calls[0][1]` thay vì `toHaveBeenCalledWith(anything, matcher)`
+- Production path không ảnh hưởng, flag rõ
+- **Lesson:** mocking library có limitation — workaround + document là acceptable.
+
+**Insight #5: Commitlint warning `footer-leading-blank` non-blocking**
+
+- Footer "Refs: docs/tasks.md T-006" sát body → warning level 1
+- Không fail commit
+- **Lesson:** hiểu 3 level commitlint (0/1/2) để tune strictness đúng tốc độ team.
+
+### Cách chỉnh sửa
+
+1. `pnpm nx reset && nx run-many --target=test --all` trước commit (T-005 lesson applied)
+2. Smoke 7 scenarios (admin/manager/employee + BSSID valid/invalid + cascade-block + create)
+3. Verify audit_logs entries
+4. Commit `13015fb` — 33 files auto-formatted qua lint-staged
+5. PR #5 → CI pass → user merge
+
+### Kết quả cuối cùng
+
+- Commit: `13015fb` — `feat(branches): add CRUD + WiFi/Geofence config + manager scope + audit`
+- Merge: `1d31592` — PR #5
+- Test: 11/11 unit + 7/7 smoke + CI pass
+- Pattern established cho T-007 reuse: split services, scope helper, AuditLogService tx variant, soft delete, DTO với PartialType
+
+### Bài học rút ra
+
+- **Separation of concerns module design:** business service không ở module infrastructure.
+- **AI self-audit khả thi** khi prompt yêu cầu "known issues" explicit.
+- **Pattern reuse accelerates velocity:** T-006 ít push back hơn T-005 vì libs/api/common đã có template.
+- **Mocking library edge case** (DeepMockProxy + $transaction) — workaround + doc là acceptable.
+- **Commitlint level 0/1/2:** hiểu rõ để tune strictness.
+
+---
+
+<!-- Thêm entry mới ở dưới đây -->
+
+## [#08] <Next: T-007 Employees CRUD>
 
 - **Date:**
 - **Tool:**
