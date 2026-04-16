@@ -22,6 +22,7 @@ import {
   homeOutline,
   logOutOutline,
   peopleOutline,
+  timeOutline,
 } from 'ionicons/icons';
 import { AuthService } from '../core/auth/auth.service';
 
@@ -29,6 +30,7 @@ addIcons({
   'home-outline': homeOutline,
   'business-outline': businessOutline,
   'people-outline': peopleOutline,
+  'time-outline': timeOutline,
   'log-out-outline': logOutOutline,
 });
 
