@@ -1,32 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
-import {
-  ToastController,
-  IonBackButton,
-  IonBadge,
-  IonButtons,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardSubtitle,
-  IonCardTitle,
-  IonChip,
-  IonContent,
-  IonHeader,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonNote,
-  IonSpinner,
-  IonText,
-  IonTitle,
-  IonToolbar,
-} from '@ionic/angular/standalone';
+
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { firstValueFrom } from 'rxjs';
 import { DashboardApiService } from '../../core/dashboard/dashboard.api.service';
-import { showErrorToast } from '../../core/util/error-toast.util';
 import { RiskFlagChipComponent } from '../../shared/components/risk-flag-chip.component';
 import { BranchDashboard } from '../../shared/types/dashboard.types';
 
@@ -37,34 +15,15 @@ import { BranchDashboard } from '../../shared/types/dashboard.types';
     CommonModule,
     RouterLink,
     NgApexchartsModule,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonButtons,
-    IonBackButton,
-    IonContent,
-    IonCard,
-    IonCardHeader,
-    IonCardTitle,
-    IonCardSubtitle,
-    IonCardContent,
-    IonChip,
-    IonLabel,
-    IonList,
-    IonItem,
-    IonNote,
-    IonBadge,
-    IonText,
-    IonSpinner,
     RiskFlagChipComponent,
   ],
   templateUrl: './branch-dashboard.page.html',
+  styleUrl: './branch-dashboard.page.scss',
 })
 export class BranchDashboardPage {
   private readonly api = inject(DashboardApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly toast = inject(ToastController);
 
   readonly data = signal<BranchDashboard | null>(null);
   readonly loading = signal(false);
@@ -85,7 +44,7 @@ export class BranchDashboardPage {
       );
       this.data.set(resp.data);
     } catch (err) {
-      await showErrorToast(this.toast, err);
+      console.error(err);
       await this.router.navigate(['/dashboard']);
     } finally {
       this.loading.set(false);
@@ -106,8 +65,8 @@ export class BranchDashboardPage {
       xaxis: { categories: d.week_trend.map((w) => w.date) },
       yaxis: { min: 0, max: 100 },
       stroke: { curve: 'smooth' as const, width: 3 },
-      colors: ['#3880ff'],
-      title: { text: 'Tỷ lệ đúng giờ 7 ngày (%)' },
+      colors: ['#10b981'],
+      title: { text: '' },
     };
   }
 }

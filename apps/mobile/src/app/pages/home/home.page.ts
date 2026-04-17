@@ -98,6 +98,10 @@ export class HomePage {
     return 'done';
   });
 
+  async ngOnInit() {
+    await this.loadToday();
+  }
+
   async ionViewWillEnter() {
     await this.loadToday();
   }

@@ -1,29 +1,5 @@
-import { Component, inject, signal, OnDestroy, Input } from '@angular/core';
-import {
-  IonButton,
-  IonButtons,
-  IonContent,
-  IonFooter,
-  IonHeader,
-  IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonNote,
-  IonProgressBar,
-  IonSpinner,
-  IonText,
-  IonTitle,
-  IonToolbar,
-  ModalController,
-  ToastController,
-} from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons';
-import {
-  checkmarkCircleOutline,
-  closeCircleOutline,
-  downloadOutline,
-} from 'ionicons/icons';
+import { Component, inject, signal, OnDestroy, Input, OnInit } from '@angular/core';
+import { ModalController, ToastController } from '@ionic/angular/standalone';
 import { firstValueFrom } from 'rxjs';
 import {
   CreateExportDto,
@@ -32,11 +8,6 @@ import {
 } from '../../core/reports/reports.api.service';
 import { showErrorToast } from '../../core/util/error-toast.util';
 
-addIcons({
-  'checkmark-circle-outline': checkmarkCircleOutline,
-  'close-circle-outline': closeCircleOutline,
-  'download-outline': downloadOutline,
-});
 
 const POLL_MS = 2_000;
 const MAX_POLLS = 150; // 5 minutes
@@ -44,26 +15,10 @@ const MAX_POLLS = 150; // 5 minutes
 @Component({
   selector: 'app-export-progress-modal',
   standalone: true,
-  imports: [
-    IonHeader,
-    IonToolbar,
-    IonButtons,
-    IonTitle,
-    IonButton,
-    IonContent,
-    IonFooter,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonNote,
-    IonProgressBar,
-    IonSpinner,
-    IonText,
-    IonIcon,
-  ],
   templateUrl: './export-progress.modal.html',
+  styleUrl: './export-progress.modal.scss',
 })
-export class ExportProgressModal implements OnDestroy {
+export class ExportProgressModal implements OnInit, OnDestroy {
   private readonly api = inject(ReportsApiService);
   private readonly modalCtrl = inject(ModalController);
   private readonly toastCtrl = inject(ToastController);
@@ -81,7 +36,7 @@ export class ExportProgressModal implements OnDestroy {
   private pollCount = 0;
   private blobUrl: string | null = null;
 
-  async ionViewWillEnter(): Promise<void> {
+  async ngOnInit(): Promise<void> {
     await this.startExport();
   }
 

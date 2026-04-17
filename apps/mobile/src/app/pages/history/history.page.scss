@@ -228,7 +228,7 @@ ion-content::part(background) {
         border-radius: 8px;
 
         &.on-time {
-          background: var(--primary);
+          background: #16a34a;
           color: white;
         }
         &.late {
@@ -237,6 +237,14 @@ ion-content::part(background) {
         }
         &.absent {
           background: #ef4444;
+          color: white;
+        }
+        &.early-leave {
+          background: #8b5cf6;
+          color: white;
+        }
+        &.missing-checkout {
+          background: #6b7280;
           color: white;
         }
       }

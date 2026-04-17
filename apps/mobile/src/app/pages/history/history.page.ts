@@ -54,6 +54,10 @@ export class HistoryPage {
 
   formatStatus = formatAttendanceStatus;
 
+  async ngOnInit() {
+    await this.reload();
+  }
+
   async ionViewWillEnter() {
     await this.reload();
   }

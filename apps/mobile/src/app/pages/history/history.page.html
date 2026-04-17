@@ -43,14 +43,20 @@
             @if (s.trust_score !== null) {
             <div
               class="trust-badge"
-              [class]="s.trust_score >= 70 ? 'success' : s.trust_score >= 40 ? 'warning' : 'danger'"
+              [class.success]="s.trust_score! >= 70"
+              [class.warning]="s.trust_score! >= 40 && s.trust_score! < 70"
+              [class.danger]="s.trust_score! < 40"
             >
               {{ s.trust_score }}
             </div>
             }
             <div
               class="status-badge"
-              [class]="s.status === 'on-time' ? 'on-time' : s.status === 'late' ? 'late' : 'absent'"
+              [class.on-time]="s.status === 'on_time'"
+              [class.late]="s.status === 'late'"
+              [class.absent]="s.status === 'absent'"
+              [class.early-leave]="s.status === 'early_leave'"
+              [class.missing-checkout]="s.status === 'missing_checkout'"
             >
               {{ formatStatus(s.status) }}
             </div>

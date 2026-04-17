@@ -1,89 +1,93 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/dashboard"></ion-back-button>
-    </ion-buttons>
-    <ion-title>
-      @if (data(); as d) { Chi nhánh — {{ d.branch.name }} }
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content class="ion-padding">
+<div class="page-container">
   @if (loading()) {
-  <ion-spinner name="crescent"></ion-spinner>
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Đang tải dữ liệu báo cáo...</p>
+    </div>
   } @else if (data(); as d) {
+    <div class="page-header">
+      <div class="header-left">
+        <a routerLink="/dashboard" class="btn-back">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48" d="M244 400L100 256l144-144M120 256h292"/></svg>
+        </a>
+        <div>
+          <h1>Chi nhánh {{ d.branch.name }}</h1>
+          <p class="subtitle">Báo cáo tổng quan tình hình điểm danh hôm nay</p>
+        </div>
+      </div>
+    </div>
 
-  <ion-card>
-    <ion-card-header>
-      <ion-card-subtitle>Hôm nay</ion-card-subtitle>
-      <ion-card-title
-        >{{ d.today.checked_in }}/{{ d.today.total }} đã chấm
-        công</ion-card-title
-      >
-    </ion-card-header>
-    <ion-card-content>
-      <ion-chip color="success"
-        ><ion-label>On-time {{ d.today.on_time }}</ion-label></ion-chip
-      >
-      <ion-chip color="warning"
-        ><ion-label>Late {{ d.today.late }}</ion-label></ion-chip
-      >
-      <ion-chip color="medium"
-        ><ion-label>Chưa: {{ d.today.not_yet }}</ion-label></ion-chip
-      >
-      <ion-chip color="danger"
-        ><ion-label>Absent {{ d.today.absent }}</ion-label></ion-chip
-      >
-    </ion-card-content>
-  </ion-card>
+    <div class="dashboard-grid">
+      <!-- Today Summary -->
+      <div class="dashboard-card summary-card">
+        <div class="card-header">
+          <h3>Hôm nay</h3>
+        </div>
+        <div class="card-content">
+          <div class="big-number">
+            <span class="value">{{ d.today.checked_in }}/{{ d.today.total }}</span>
+            <span class="label">đã chấm công</span>
+          </div>
 
-  <ion-card>
-    <ion-card-content>
-      @if (weekTrendChart(); as c) {
-      <apx-chart
-        [series]="c.series"
-        [chart]="c.chart"
-        [xaxis]="c.xaxis"
-        [yaxis]="c.yaxis"
-        [stroke]="c.stroke"
-        [colors]="c.colors"
-        [title]="c.title"
-      ></apx-chart>
-      }
-    </ion-card-content>
-  </ion-card>
+          <div class="stats-pills">
+            <div class="pill success">Đúng giờ: <strong>{{ d.today.on_time }}</strong></div>
+            <div class="pill warning">Đi trễ: <strong>{{ d.today.late }}</strong></div>
+            <div class="pill medium">Chưa điểm danh: <strong>{{ d.today.not_yet }}</strong></div>
+            <div class="pill danger">Vắng mặt: <strong>{{ d.today.absent }}</strong></div>
+          </div>
+        </div>
+      </div>
 
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>Phiên trust score thấp hôm nay</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      @if (d.low_trust_today.length === 0) {
-      <ion-text color="medium">Không có phiên đáng nghi.</ion-text>
-      } @else {
-      <ion-list>
-        @for (s of d.low_trust_today; track s.session_id) {
-        <ion-item [routerLink]="['/attendance', s.session_id]" detail="true">
-          <ion-label>
-            <h3>{{ s.employee.name }} ({{ s.employee.code }})</h3>
-            @if (s.risk_flags.length > 0) {
-            <p class="risk-flag-row">
-              @for (f of s.risk_flags; track f) {
-              <app-risk-flag-chip [flag]="f"></app-risk-flag-chip>
+      <!-- Trend Chart -->
+      <div class="dashboard-card chart-card">
+        <div class="card-content">
+          @if (weekTrendChart(); as c) {
+            <apx-chart
+              [series]="c.series"
+              [chart]="c.chart"
+              [xaxis]="c.xaxis"
+              [yaxis]="c.yaxis"
+              [stroke]="c.stroke"
+              [colors]="c.colors"
+              [title]="c.title"
+            ></apx-chart>
+          }
+        </div>
+      </div>
+
+      <!-- Low Trust Sessions -->
+      <div class="dashboard-card list-card">
+        <div class="card-header">
+          <h3>Phiên Trust Score thấp hôm nay</h3>
+        </div>
+        <div class="card-content">
+          @if (d.low_trust_today.length === 0) {
+            <div class="empty-state">
+              <p>Hôm nay không có phiên điểm danh nào đáng ngờ.</p>
+            </div>
+          } @else {
+            <div class="data-list">
+              @for (s of d.low_trust_today; track s.session_id) {
+                <a [routerLink]="['/attendance', s.session_id]" class="data-item">
+                  <div class="item-info">
+                    <h4>{{ s.employee.name }} <span class="emp-code">({{ s.employee.code }})</span></h4>
+                    @if (s.risk_flags.length > 0) {
+                      <div class="risk-flags">
+                        @for (f of s.risk_flags; track f) {
+                          <app-risk-flag-chip [flag]="f"></app-risk-flag-chip>
+                        }
+                      </div>
+                    }
+                  </div>
+                  <div class="item-actions">
+                    <span class="trust-badge">{{ s.trust_score }}</span>
+                  </div>
+                </a>
               }
-            </p>
-            }
-          </ion-label>
-          <ion-note slot="end">
-            <ion-badge color="danger">{{ s.trust_score }}</ion-badge>
-          </ion-note>
-        </ion-item>
-        }
-      </ion-list>
-      }
-    </ion-card-content>
-  </ion-card>
-
+            </div>
+          }
+        </div>
+      </div>
+    </div>
   }
-</ion-content>
+</div>

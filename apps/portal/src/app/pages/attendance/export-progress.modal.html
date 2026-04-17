@@ -1,81 +1,64 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <ion-title>Xuất báo cáo CSV</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="close()">Đóng</ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
+<div class="modal-wrapper">
+  <div class="modal-header bg-ocean">
+    <h2>Xuất báo cáo CSV</h2>
+    <button class="btn-close" (click)="close()">Đóng</button>
+  </div>
 
-<ion-content class="ion-padding">
-  <ion-list>
-    <ion-item lines="none">
-      <ion-label>
+  <div class="modal-body">
+    <div class="info-section">
+      <div class="info-row">
         <h3>Khoảng thời gian</h3>
-        <p>{{ dto.date_from }} → {{ dto.date_to }}</p>
-      </ion-label>
-    </ion-item>
-    @if (dto.branch_id) {
-    <ion-item lines="none">
-      <ion-label>
+        <p>{{ dto.date_from }} &rarr; {{ dto.date_to }}</p>
+      </div>
+      @if (dto.branch_id) {
+      <div class="info-row">
         <h3>Chi nhánh</h3>
         <p>{{ dto.branch_id }}</p>
-      </ion-label>
-    </ion-item>
-    }
-  </ion-list>
+      </div>
+      }
+    </div>
 
-  <div class="ion-padding-top">
-    @if (state() === 'starting') {
-    <ion-spinner name="crescent"></ion-spinner>
-    <ion-text class="ion-padding-start">Đang gửi yêu cầu…</ion-text>
-    } @else if (state() === 'polling') {
-    <ion-progress-bar type="indeterminate"></ion-progress-bar>
-    <ion-text color="medium">
-      <p>
-        Đang xử lý báo cáo. Trạng thái:
-        <strong>{{ status()?.status }}</strong>
-      </p>
-    </ion-text>
+    <div class="progress-section">
+      @if (state() === 'starting') {
+        <div class="state-container starting">
+          <div class="spinner"></div>
+          <p>Đang gửi yêu cầu…</p>
+        </div>
+      } @else if (state() === 'polling') {
+        <div class="state-container polling">
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill indeterminate"></div>
+          </div>
+          <p class="status-msg">
+            Đang xử lý báo cáo. Trạng thái: <strong>{{ status()?.status }}</strong>
+          </p>
+        </div>
+      } @else if (state() === 'completed') {
+        <div class="state-container completed">
+          <div class="icon-success">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M416 128L192 384l-96-96"/></svg>
+          </div>
+          <h3 class="success-title">Hoàn tất</h3>
+          <p class="success-desc">Đã xuất {{ status()?.row_count ?? 0 }} dòng. File đang được tải xuống.</p>
+          <span class="expiry">Hết hạn: {{ status()?.expires_at }}</span>
+        </div>
+      } @else if (state() === 'failed') {
+        <div class="state-container failed">
+          <div class="icon-danger">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M368 368L144 144M368 144L144 368"/></svg>
+          </div>
+          <h3 class="danger-title">Thất bại</h3>
+          <p class="danger-desc">{{ errorMsg() }}</p>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    @if (state() === 'failed') {
+      <button class="btn-primary full-width" (click)="retry()">Thử lại</button>
     } @else if (state() === 'completed') {
-    <div class="ion-text-center">
-      <ion-icon
-        name="checkmark-circle-outline"
-        color="success"
-        size="large"
-      ></ion-icon>
-      <br />
-      <ion-text color="success">
-        <h3>Hoàn tất</h3>
-        <p>
-          Đã xuất {{ status()?.row_count ?? 0 }} dòng. File đang được tải xuống.
-        </p>
-      </ion-text>
-      <ion-note> Hết hạn: {{ status()?.expires_at }} </ion-note>
-    </div>
-    } @else if (state() === 'failed') {
-    <div class="ion-text-center">
-      <ion-icon
-        name="close-circle-outline"
-        color="danger"
-        size="large"
-      ></ion-icon>
-      <br />
-      <ion-text color="danger">
-        <h3>Thất bại</h3>
-        <p>{{ errorMsg() }}</p>
-      </ion-text>
-    </div>
+      <button class="btn-primary full-width" (click)="close()">Đóng</button>
     }
   </div>
-</ion-content>
-
-<ion-footer>
-  <ion-toolbar>
-    @if (state() === 'failed') {
-    <ion-button expand="block" (click)="retry()">Thử lại</ion-button>
-    } @else if (state() === 'completed') {
-    <ion-button expand="block" (click)="close()">Đóng</ion-button>
-    }
-  </ion-toolbar>
-</ion-footer>
+</div>
