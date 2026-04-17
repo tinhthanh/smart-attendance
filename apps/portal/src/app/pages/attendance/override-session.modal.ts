@@ -5,28 +5,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import {
-  ModalController,
-  ToastController,
-  IonButton,
-  IonButtons,
-  IonChip,
-  IonContent,
-  IonHeader,
-  IonIcon,
-  IonItem,
-  IonLabel,
-  IonNote,
-  IonSelect,
-  IonSelectOption,
-  IonSpinner,
-  IonText,
-  IonTextarea,
-  IonTitle,
-  IonToolbar,
-} from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons';
-import { arrowForwardOutline } from 'ionicons/icons';
+import { ModalController, ToastController } from '@ionic/angular/standalone';
 import { firstValueFrom } from 'rxjs';
 import { AttendanceApiService } from '../../core/attendance/attendance.api.service';
 import { showErrorToast } from '../../core/util/error-toast.util';
@@ -41,26 +20,9 @@ addIcons({ 'arrow-forward-outline': arrowForwardOutline });
 @Component({
   selector: 'app-override-session-modal',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonButtons,
-    IonButton,
-    IonContent,
-    IonItem,
-    IonLabel,
-    IonSelect,
-    IonSelectOption,
-    IonTextarea,
-    IonChip,
-    IonIcon,
-    IonNote,
-    IonSpinner,
-    IonText,
-  ],
+  imports: [ReactiveFormsModule],
   templateUrl: './override-session.modal.html',
+  styleUrls: ['./override-session.modal.scss'],
 })
 export class OverrideSessionModal {
   @Input() sessionId = '';

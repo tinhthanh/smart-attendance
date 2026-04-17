@@ -1,6 +1,17 @@
 import { test, expect } from '@playwright/test';
 import { loginAs, logout } from './helpers/auth.helper';
 
+/**
+ * Helper: click a sidebar nav-item by its visible text.
+ * Uses the sidebar `.nav-item` links so the transition is smooth
+ * (no full-page reload like page.goto).
+ */
+async function clickMenu(page: import('@playwright/test').Page, label: RegExp) {
+  const item = page.locator('.sidebar-nav .nav-item').filter({ hasText: label });
+  await item.click();
+  await page.waitForTimeout(1500);
+}
+
 test('Smart Attendance — Portal Full Demo', async ({ page }) => {
   // ========================================
   // PART 1: ADMIN — Full system walkthrough
@@ -19,13 +30,13 @@ test('Smart Attendance — Portal Full Demo', async ({ page }) => {
   await page.waitForTimeout(1500);
 
   // 1.3 Click menu "Chi nhánh"
-  await page.goto('/branches');
-  await page.waitForTimeout(2500);
+  await clickMenu(page, /chi nhánh/i);
+  await page.waitForTimeout(1500);
   await page.mouse.wheel(0, 200);
   await page.waitForTimeout(1500);
 
   // Click first branch → detail
-  const branch1 = page.locator('ion-item, [class*="card"], [class*="item"], tr').first();
+  const branch1 = page.locator('[class*="card"], [class*="item"], tr').first();
   if (await branch1.isVisible().catch(() => false)) {
     await branch1.click();
     await page.waitForTimeout(2500);
@@ -34,14 +45,14 @@ test('Smart Attendance — Portal Full Demo', async ({ page }) => {
     await page.waitForTimeout(1500);
   }
 
-  // 1.4 Back to branches → go to Employees
-  await page.goto('/employees');
-  await page.waitForTimeout(2500);
+  // 1.4 Click menu "Nhân viên"
+  await clickMenu(page, /nhân viên/i);
+  await page.waitForTimeout(1500);
   await page.mouse.wheel(0, 300);
   await page.waitForTimeout(1500);
 
   // Click first employee → detail
-  const emp1 = page.locator('ion-item, [class*="card"], [class*="item"], tr').first();
+  const emp1 = page.locator('[class*="card"], [class*="item"], tr').first();
   if (await emp1.isVisible().catch(() => false)) {
     await emp1.click();
     await page.waitForTimeout(2500);
@@ -49,14 +60,14 @@ test('Smart Attendance — Portal Full Demo', async ({ page }) => {
     await page.waitForTimeout(1500);
   }
 
-  // 1.5 Go to Attendance
-  await page.goto('/attendance');
-  await page.waitForTimeout(2500);
+  // 1.5 Click menu "Chấm công"
+  await clickMenu(page, /chấm công/i);
+  await page.waitForTimeout(1500);
   await page.mouse.wheel(0, 200);
   await page.waitForTimeout(1500);
 
   // Click first session → detail with events timeline
-  const session1 = page.locator('ion-item, [class*="card"], [class*="item"], tr').first();
+  const session1 = page.locator('[class*="card"], [class*="item"], tr').first();
   if (await session1.isVisible().catch(() => false)) {
     await session1.click();
     await page.waitForTimeout(2500);
@@ -64,9 +75,9 @@ test('Smart Attendance — Portal Full Demo', async ({ page }) => {
     await page.waitForTimeout(1500);
   }
 
-  // 1.6 Back to attendance → Export CSV
-  await page.goto('/attendance');
-  await page.waitForTimeout(2000);
+  // 1.6 Back to attendance via menu → Export CSV
+  await clickMenu(page, /chấm công/i);
+  await page.waitForTimeout(1500);
   const exportBtn = page.getByText(/xuất csv|export/i).first();
   if (await exportBtn.isVisible().catch(() => false)) {
     await exportBtn.click();
@@ -77,9 +88,9 @@ test('Smart Attendance — Portal Full Demo', async ({ page }) => {
     await page.waitForTimeout(1000);
   }
 
-  // 1.7 Go to Anomaly Dashboard
-  await page.goto('/anomalies');
-  await page.waitForTimeout(2500);
+  // 1.7 Click menu "Bất thường"
+  await clickMenu(page, /bất thường/i);
+  await page.waitForTimeout(2000);
   await page.mouse.wheel(0, 300);
   await page.waitForTimeout(1500);
   await page.mouse.wheel(0, 300);
@@ -102,23 +113,23 @@ test('Smart Attendance — Portal Full Demo', async ({ page }) => {
   await page.mouse.wheel(0, 200);
   await page.waitForTimeout(1500);
 
-  // 2.3 Branches — scoped (only HCM-Q1 + badge)
-  await page.goto('/branches');
-  await page.waitForTimeout(2500);
+  // 2.3 Branches — click menu
+  await clickMenu(page, /chi nhánh/i);
+  await page.waitForTimeout(2000);
 
-  // 2.4 Employees — scoped
-  await page.goto('/employees');
-  await page.waitForTimeout(2500);
+  // 2.4 Employees — click menu
+  await clickMenu(page, /nhân viên/i);
+  await page.waitForTimeout(2000);
 
-  // 2.5 Attendance — scoped sessions
-  await page.goto('/attendance');
-  await page.waitForTimeout(2500);
+  // 2.5 Attendance — click menu
+  await clickMenu(page, /chấm công/i);
+  await page.waitForTimeout(2000);
   await page.mouse.wheel(0, 200);
   await page.waitForTimeout(1500);
 
-  // 2.6 Anomalies — scoped
-  await page.goto('/anomalies');
-  await page.waitForTimeout(2500);
+  // 2.6 Anomalies — click menu
+  await clickMenu(page, /bất thường/i);
+  await page.waitForTimeout(2000);
 
   // 2.7 Logout Manager
   await logout(page);

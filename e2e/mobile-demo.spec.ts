@@ -1,6 +1,17 @@
 import { test } from '@playwright/test';
 
-test('Smart Attendance — Mobile Employee Demo', async ({ page, context }) => {
+/**
+ * Helper: click a tab button by its label text.
+ * Uses the ion-tab-bar buttons so the transition is smooth
+ * (no full-page reload like page.goto).
+ */
+async function clickTab(page: import('@playwright/test').Page, label: RegExp) {
+  const tab = page.locator('ion-tab-button').filter({ hasText: label });
+  await tab.click();
+  await page.waitForTimeout(1500);
+}
+
+test('Smart Attendance \u2014 Mobile Employee Demo', async ({ page, context }) => {
   await context.grantPermissions(['geolocation']);
   await context.setGeolocation({ latitude: 10.7769, longitude: 106.7009 });
 
@@ -23,7 +34,7 @@ test('Smart Attendance — Mobile Employee Demo', async ({ page, context }) => {
   await page.waitForTimeout(3000);
 
   // ========================================
-  // SCENE 2: Home — view info + Check-in
+  // SCENE 2: Home \u2014 view info + Check-in
   // ========================================
   await page.waitForTimeout(2000);
 
@@ -59,33 +70,25 @@ test('Smart Attendance — Mobile Employee Demo', async ({ page, context }) => {
   }
 
   // ========================================
-  // SCENE 4: History tab — scroll entries
+  // SCENE 4: History tab \u2014 click tab button
   // ========================================
-  await page.goto('/tabs/history');
-  await page.waitForTimeout(3000);
+  await clickTab(page, /l\u1ecbch s\u1eed|history/i);
+  await page.waitForTimeout(2000);
   await page.mouse.wheel(0, 300);
   await page.waitForTimeout(2000);
   await page.mouse.wheel(0, 200);
   await page.waitForTimeout(1500);
 
   // ========================================
-  // SCENE 5: Trust Score tab
+  // SCENE 5: Profile tab \u2192 Logout
   // ========================================
-  await page.goto('/tabs/trust');
-  await page.waitForTimeout(3000);
-  await page.mouse.wheel(0, 300);
+  await clickTab(page, /t\u00f4i|profile/i);
   await page.waitForTimeout(2000);
-
-  // ========================================
-  // SCENE 6: Profile tab → Logout
-  // ========================================
-  await page.goto('/tabs/profile');
-  await page.waitForTimeout(3000);
   await page.mouse.wheel(0, 200);
   await page.waitForTimeout(2000);
 
   // Logout
-  const logoutBtn = page.getByText(/đăng xuất|logout/i).first();
+  const logoutBtn = page.getByText(/\u0111\u0103ng xu\u1ea5t|logout/i).first();
   if (await logoutBtn.isVisible().catch(() => false)) {
     await logoutBtn.click();
     await page.waitForTimeout(2000);
