@@ -1,0 +1,110 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sa-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-smart_attendance}
+      POSTGRES_USER: ${POSTGRES_USER:-sa_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    ports:
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - sa-postgres-data:/var/lib/postgresql/data
+    networks:
+      - sa-net
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: sa-redis
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    ports:
+      - '127.0.0.1:${REDIS_PORT:-6379}:6379'
+    volumes:
+      - sa-redis-data:/data
+    networks:
+      - sa-net
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: smart-attendance-api:latest
+    container_name: sa-api
+    restart: unless-stopped
+    # Service-to-service URLs intentionally hardcoded here so .env (which is
+    # tuned for local dev with localhost:5433) stays usable for `pnpm nx serve`.
+    # Only secrets are read from .env.
+    environment:
+      NODE_ENV: production
+      API_PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sa_app}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-smart_attendance}?schema=public
+      REDIS_URL: redis://redis:6379/0
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+      JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-7d}
+    ports:
+      - '127.0.0.1:${API_PORT:-3000}:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sa-net
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://127.0.0.1:3000/api/v1/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  portal:
+    build:
+      context: .
+      dockerfile: apps/portal/Dockerfile
+    image: smart-attendance-portal:latest
+    container_name: sa-portal
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:${PORTAL_PORT:-4200}:80'
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - sa-net
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1/healthz']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  sa-postgres-data:
+  sa-redis-data:
+
+networks:
+  sa-net:
+    driver: bridge
+    name: sa-net

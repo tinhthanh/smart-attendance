@@ -1,0 +1,38 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@smart-attendance/api/attendance": ["libs/api/attendance/src/index.ts"],
+      "@smart-attendance/api/auth": ["libs/api/auth/src/index.ts"],
+      "@smart-attendance/api/branches": ["libs/api/branches/src/index.ts"],
+      "@smart-attendance/api/common": ["libs/api/common/src/index.ts"],
+      "@smart-attendance/api/dashboard": ["libs/api/dashboard/src/index.ts"],
+      "@smart-attendance/api/employees": ["libs/api/employees/src/index.ts"],
+      "@smart-attendance/api/jobs": ["libs/api/jobs/src/index.ts"],
+      "@smart-attendance/api/reports": ["libs/api/reports/src/index.ts"],
+      "@smart-attendance/shared/constants": [
+        "libs/shared/constants/src/index.ts"
+      ],
+      "@smart-attendance/shared/types": ["libs/shared/types/src/index.ts"],
+      "@smart-attendance/shared/utils": ["libs/shared/utils/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

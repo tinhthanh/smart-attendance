@@ -1,0 +1,121 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/attendance"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      @if (session(); as s) { Chấm công / {{ s.work_date }} / {{
+      s.employee.employee_code }} }
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (loading()) {
+  <ion-spinner name="crescent"></ion-spinner>
+  } @else if (notFound()) {
+  <div class="ion-text-center ion-padding">
+    <ion-icon name="alert-circle" size="large" color="danger"></ion-icon>
+    <br />
+    <ion-text color="medium">
+      <p>Phiên chấm công không tồn tại hoặc bạn không có quyền xem</p>
+    </ion-text>
+    <ion-button (click)="goBack()" color="primary"
+      >Quay lại danh sách</ion-button
+    >
+  </div>
+  } @else if (session(); as s) {
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-subtitle>{{ s.work_date }}</ion-card-subtitle>
+      <ion-card-title>{{ s.employee.full_name }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p><strong>Mã NV:</strong> {{ s.employee.employee_code }}</p>
+      <p><strong>Chi nhánh:</strong> {{ s.branch.name }}</p>
+      <p>
+        <strong>Vào:</strong> {{ s.check_in_at ? (s.check_in_at | date:
+        'HH:mm:ss') : '-' }}
+      </p>
+      <p>
+        <strong>Ra:</strong> {{ s.check_out_at ? (s.check_out_at | date:
+        'HH:mm:ss') : '-' }}
+      </p>
+      @if (s.worked_minutes) {
+      <p>
+        <strong>Giờ làm:</strong> {{ s.worked_minutes }} phút (OT: {{
+        s.overtime_minutes ?? 0 }})
+      </p>
+      }
+      <p>
+        <strong>Trạng thái:</strong>
+        <ion-chip [color]="statusColor(s.status)">
+          <ion-label>{{ formatStatus(s.status) }}</ion-label>
+        </ion-chip>
+        <ion-chip
+          [color]="trustColor(s.trust_score)"
+          [attr.aria-label]="'Điểm tin cậy ' + (s.trust_score ?? 0)"
+        >
+          <ion-label>Trust: {{ s.trust_score ?? '-' }}</ion-label>
+        </ion-chip>
+      </p>
+    </ion-card-content>
+  </ion-card>
+
+  @if (canOverride()) {
+  <ion-button expand="block" color="warning" (click)="onOverride()">
+    <ion-icon slot="start" name="hammer-outline"></ion-icon>
+    Ghi đè trạng thái
+  </ion-button>
+  }
+
+  <br />
+  <h3>Sự kiện</h3>
+  @if (s.events.length === 0) {
+  <ion-text color="medium">Không có sự kiện</ion-text>
+  } @else {
+  <ion-list>
+    @for (e of s.events; track e.id) {
+    <ion-item>
+      <ion-icon
+        slot="start"
+        [name]="e.status === 'success' ? 'checkmark-circle' : 'close-circle'"
+        [color]="e.status === 'success' ? 'success' : 'danger'"
+      ></ion-icon>
+      <ion-label>
+        <h3>
+          {{ e.created_at | date: 'HH:mm:ss' }} — {{ formatEvent(e.event_type)
+          }}
+          <ion-chip
+            [color]="e.status === 'success' ? 'success' : 'danger'"
+            style="margin-left: 8px"
+          >
+            <ion-label>{{ e.status }}</ion-label>
+          </ion-chip>
+        </h3>
+        <p>
+          Method: <strong>{{ e.validation_method }}</strong> · Trust:
+          <ion-chip [color]="trustColor(e.trust_score)" style="height: 20px">
+            <ion-label>{{ e.trust_score }}</ion-label>
+          </ion-chip>
+        </p>
+        @if (e.latitude !== null && e.longitude !== null) {
+        <p>
+          GPS: {{ e.latitude }}, {{ e.longitude }} ±{{ e.accuracy_meters }}m
+        </p>
+        } @if (e.ssid) {
+        <p>WiFi: {{ e.ssid }} ({{ e.bssid || 'no BSSID' }})</p>
+        } @if (e.risk_flags && e.risk_flags.length > 0) {
+        <p class="risk-flag-row">
+          @for (f of e.risk_flags; track f) {
+          <app-risk-flag-chip [flag]="f"></app-risk-flag-chip>
+          }
+        </p>
+        }
+      </ion-label>
+    </ion-item>
+    }
+  </ion-list>
+  } }
+</ion-content>

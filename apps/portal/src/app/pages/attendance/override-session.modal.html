@@ -1,0 +1,70 @@
+<ion-header>
+  <ion-toolbar color="warning">
+    <ion-title>Ghi đè trạng thái</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="onCancel()">Hủy</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-text color="medium">
+    <p><em>Hành động này sẽ được ghi vào audit log vĩnh viễn.</em></p>
+  </ion-text>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <ion-item>
+      <ion-select
+        label="Trạng thái mới"
+        labelPlacement="floating"
+        formControlName="status"
+      >
+        @for (s of options; track s) {
+        <ion-select-option [value]="s">{{ formatStatus(s) }}</ion-select-option>
+        }
+      </ion-select>
+    </ion-item>
+
+    @if (form.get('status')?.value) {
+    <ion-item lines="none">
+      <ion-label>
+        <h3>Xem trước thay đổi</h3>
+      </ion-label>
+    </ion-item>
+    <ion-item lines="none">
+      <ion-chip color="medium">
+        <ion-label>{{ formatStatus(currentStatus) }}</ion-label>
+      </ion-chip>
+      <ion-icon slot="end" name="arrow-forward-outline"></ion-icon>
+      <ion-chip color="warning" slot="end">
+        <ion-label>{{ formatStatus(form.get('status')?.value) }}</ion-label>
+      </ion-chip>
+    </ion-item>
+    }
+
+    <ion-item>
+      <ion-textarea
+        label="Lý do (≥10 ký tự)"
+        labelPlacement="floating"
+        formControlName="note"
+        rows="4"
+        placeholder="VD: Nhân viên báo sự cố mạng buổi sáng, đã xác nhận thủ công qua điện thoại"
+      ></ion-textarea>
+    </ion-item>
+    <ion-note class="ion-padding-start" color="medium"
+      >{{ charCount }}/500</ion-note
+    >
+
+    <br />
+    <ion-button
+      expand="block"
+      color="warning"
+      type="submit"
+      [disabled]="form.invalid || loading()"
+    >
+      @if (loading()) {
+      <ion-spinner name="crescent"></ion-spinner>
+      } @else { Xác nhận ghi đè }
+    </ion-button>
+  </form>
+</ion-content>

@@ -1,0 +1,81 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Xuất báo cáo CSV</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="close()">Đóng</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-list>
+    <ion-item lines="none">
+      <ion-label>
+        <h3>Khoảng thời gian</h3>
+        <p>{{ dto.date_from }} → {{ dto.date_to }}</p>
+      </ion-label>
+    </ion-item>
+    @if (dto.branch_id) {
+    <ion-item lines="none">
+      <ion-label>
+        <h3>Chi nhánh</h3>
+        <p>{{ dto.branch_id }}</p>
+      </ion-label>
+    </ion-item>
+    }
+  </ion-list>
+
+  <div class="ion-padding-top">
+    @if (state() === 'starting') {
+    <ion-spinner name="crescent"></ion-spinner>
+    <ion-text class="ion-padding-start">Đang gửi yêu cầu…</ion-text>
+    } @else if (state() === 'polling') {
+    <ion-progress-bar type="indeterminate"></ion-progress-bar>
+    <ion-text color="medium">
+      <p>
+        Đang xử lý báo cáo. Trạng thái:
+        <strong>{{ status()?.status }}</strong>
+      </p>
+    </ion-text>
+    } @else if (state() === 'completed') {
+    <div class="ion-text-center">
+      <ion-icon
+        name="checkmark-circle-outline"
+        color="success"
+        size="large"
+      ></ion-icon>
+      <br />
+      <ion-text color="success">
+        <h3>Hoàn tất</h3>
+        <p>
+          Đã xuất {{ status()?.row_count ?? 0 }} dòng. File đang được tải xuống.
+        </p>
+      </ion-text>
+      <ion-note> Hết hạn: {{ status()?.expires_at }} </ion-note>
+    </div>
+    } @else if (state() === 'failed') {
+    <div class="ion-text-center">
+      <ion-icon
+        name="close-circle-outline"
+        color="danger"
+        size="large"
+      ></ion-icon>
+      <br />
+      <ion-text color="danger">
+        <h3>Thất bại</h3>
+        <p>{{ errorMsg() }}</p>
+      </ion-text>
+    </div>
+    }
+  </div>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    @if (state() === 'failed') {
+    <ion-button expand="block" (click)="retry()">Thử lại</ion-button>
+    } @else if (state() === 'completed') {
+    <ion-button expand="block" (click)="close()">Đóng</ion-button>
+    }
+  </ion-toolbar>
+</ion-footer>
