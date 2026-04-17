@@ -34,6 +34,7 @@ import {
   OVERRIDE_STATUS_OPTIONS,
   SessionStatus,
 } from '../../shared/types/attendance-session.types';
+import { formatAttendanceStatus } from '@smart-attendance/shared/constants';
 
 addIcons({ 'arrow-forward-outline': arrowForwardOutline });
 
@@ -64,6 +65,8 @@ addIcons({ 'arrow-forward-outline': arrowForwardOutline });
 export class OverrideSessionModal {
   @Input() sessionId = '';
   @Input() currentStatus: SessionStatus = 'on_time';
+
+  formatStatus = formatAttendanceStatus;
 
   private readonly api = inject(AttendanceApiService);
   private readonly modalCtrl = inject(ModalController);

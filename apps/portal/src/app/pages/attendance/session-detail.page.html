@@ -51,7 +51,7 @@
       <p>
         <strong>Trạng thái:</strong>
         <ion-chip [color]="statusColor(s.status)">
-          <ion-label>{{ s.status }}</ion-label>
+          <ion-label>{{ formatStatus(s.status) }}</ion-label>
         </ion-chip>
         <ion-chip
           [color]="trustColor(s.trust_score)"
@@ -85,7 +85,8 @@
       ></ion-icon>
       <ion-label>
         <h3>
-          {{ e.created_at | date: 'HH:mm:ss' }} — {{ e.event_type }}
+          {{ e.created_at | date: 'HH:mm:ss' }} — {{ formatEvent(e.event_type)
+          }}
           <ion-chip
             [color]="e.status === 'success' ? 'success' : 'danger'"
             style="margin-left: 8px"

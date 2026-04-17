@@ -8,13 +8,21 @@ import {
   IonButtons,
   IonChip,
   IonContent,
+  IonGrid,
+  IonCol,
+  IonDatetime,
+  IonDatetimeButton,
+  IonPopover,
   IonHeader,
   IonIcon,
+  IonCard,
+  IonCardContent,
   IonItem,
   IonLabel,
   IonList,
   IonMenuButton,
   IonNote,
+  IonRow,
   IonSearchbar,
   IonSelect,
   IonSelectOption,
@@ -38,6 +46,7 @@ import {
   SessionStatus,
 } from '../../shared/types/attendance-session.types';
 import { Branch, PaginationMeta } from '../../shared/types/branch.types';
+import { formatAttendanceStatus } from '@smart-attendance/shared/constants';
 
 addIcons({
   'alert-circle-outline': alertCircleOutline,
@@ -78,6 +87,14 @@ function daysAgo(n: number): string {
     IonIcon,
     IonSpinner,
     IonText,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonCard,
+    IonCardContent,
+    IonDatetime,
+    IonDatetimeButton,
+    IonPopover,
   ],
   templateUrl: './sessions-list.page.html',
 })
@@ -100,6 +117,8 @@ export class SessionsListPage {
     date_from: daysAgo(7),
     date_to: daysAgo(0),
   });
+
+  formatStatus = formatAttendanceStatus;
 
   readonly isAdmin = computed(
     () => this.auth.currentUser()?.roles.includes('admin') ?? false
@@ -182,15 +201,22 @@ export class SessionsListPage {
     this.reload();
   }
 
+  isActiveFilter(days: number): boolean {
+    const q = this.query();
+    return q.date_from === daysAgo(days) && q.date_to === daysAgo(0);
+  }
+
   onDateFrom(event: Event) {
-    const v = (event.target as HTMLInputElement).value;
+    let v = (event as any).detail?.value || (event.target as any).value;
+    if (typeof v === 'string') v = v.substring(0, 10);
     this.query.update((q) => ({ ...q, page: 1, date_from: v || undefined }));
     this.syncUrl();
     this.reload();
   }
 
   onDateTo(event: Event) {
-    const v = (event.target as HTMLInputElement).value;
+    let v = (event as any).detail?.value || (event.target as any).value;
+    if (typeof v === 'string') v = v.substring(0, 10);
     this.query.update((q) => ({ ...q, page: 1, date_to: v || undefined }));
     this.syncUrl();
     this.reload();

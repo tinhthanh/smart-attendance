@@ -17,7 +17,7 @@ function initAuth(auth: AuthService): () => Promise<void> {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideIonicAngular({ mode: 'md' }),
+    provideIonicAngular({ mode: 'ios' }),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideRouter(appRoutes),
     {

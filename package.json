@@ -117,6 +117,7 @@
     "csv-stringify": "6.7.0",
     "date-fns": "4.1.0",
     "date-fns-tz": "3.2.0",
+    "iconify-icon": "^3.0.2",
     "ionicons": "7.4.0",
     "ioredis": "5.10.1",
     "joi": "18.1.2",

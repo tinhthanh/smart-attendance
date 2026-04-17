@@ -21,6 +21,7 @@ import { firstValueFrom } from 'rxjs';
 import { CheckinApiService } from '../../core/checkin/checkin.api.service';
 import { showErrorToast } from '../../core/util/error-toast.util';
 import { AttendanceSession } from '../../shared/types/checkin.types';
+import { formatAttendanceStatus } from '@smart-attendance/shared/constants';
 
 @Component({
   selector: 'app-history',
@@ -68,9 +69,7 @@ import { AttendanceSession } from '../../shared/types/checkin.types';
             <h2>{{ s.work_date }}</h2>
             <p>
               Vào:
-              {{
-                s.check_in_at ? (s.check_in_at | date : 'HH:mm') : '--'
-              }}
+              {{ s.check_in_at ? (s.check_in_at | date : 'HH:mm') : '--' }}
               &nbsp;·&nbsp; Ra:
               {{ s.check_out_at ? (s.check_out_at | date : 'HH:mm') : '--' }}
             </p>
@@ -82,9 +81,9 @@ import { AttendanceSession } from '../../shared/types/checkin.types';
             @if (s.trust_score !== null) {
             <ion-badge
               [color]="
-                (s.trust_score ?? 0) >= 70
+                s.trust_score >= 70
                   ? 'success'
-                  : (s.trust_score ?? 0) >= 40
+                  : s.trust_score >= 40
                   ? 'warning'
                   : 'danger'
               "
@@ -93,7 +92,7 @@ import { AttendanceSession } from '../../shared/types/checkin.types';
             >
             }
             <br />
-            <ion-badge color="tertiary">{{ s.status }}</ion-badge>
+            <ion-badge color="tertiary">{{ formatStatus(s.status) }}</ion-badge>
           </ion-note>
         </ion-item>
         }
@@ -108,6 +107,8 @@ export class HistoryPage {
 
   readonly sessions = signal<AttendanceSession[]>([]);
   readonly loading = signal(false);
+
+  formatStatus = formatAttendanceStatus;
 
   async ionViewWillEnter() {
     await this.reload();

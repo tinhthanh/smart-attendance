@@ -20,7 +20,7 @@
         formControlName="status"
       >
         @for (s of options; track s) {
-        <ion-select-option [value]="s">{{ s }}</ion-select-option>
+        <ion-select-option [value]="s">{{ formatStatus(s) }}</ion-select-option>
         }
       </ion-select>
     </ion-item>
@@ -33,11 +33,11 @@
     </ion-item>
     <ion-item lines="none">
       <ion-chip color="medium">
-        <ion-label>{{ currentStatus }}</ion-label>
+        <ion-label>{{ formatStatus(currentStatus) }}</ion-label>
       </ion-chip>
       <ion-icon slot="end" name="arrow-forward-outline"></ion-icon>
       <ion-chip color="warning" slot="end">
-        <ion-label>{{ form.get('status')?.value }}</ion-label>
+        <ion-label>{{ formatStatus(form.get('status')?.value) }}</ion-label>
       </ion-chip>
     </ion-item>
     }

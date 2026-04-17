@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import {
   IonIcon,
   IonLabel,
-  IonRouterOutlet,
   IonTabBar,
   IonTabButton,
   IonTabs,
@@ -19,14 +18,7 @@ addIcons({
 @Component({
   selector: 'app-tabs',
   standalone: true,
-  imports: [
-    IonTabs,
-    IonTabBar,
-    IonTabButton,
-    IonIcon,
-    IonLabel,
-    IonRouterOutlet,
-  ],
+  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel],
   template: `
     <ion-tabs>
       <ion-tab-bar slot="bottom">
