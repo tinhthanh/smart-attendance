@@ -2,8 +2,6 @@ import { test } from '@playwright/test';
 
 /**
  * Helper: click a tab button by its label text.
- * Uses the ion-tab-bar buttons so the transition is smooth
- * (no full-page reload like page.goto).
  */
 async function clickTab(page: import('@playwright/test').Page, label: RegExp) {
   const tab = page.locator('ion-tab-button').filter({ hasText: label });
@@ -11,7 +9,25 @@ async function clickTab(page: import('@playwright/test').Page, label: RegExp) {
   await page.waitForTimeout(1500);
 }
 
-test('Smart Attendance \u2014 Mobile Employee Demo', async ({ page, context }) => {
+/**
+ * Helper: dismiss any visible Ionic alert by clicking its last button.
+ */
+async function dismissAlert(page: import('@playwright/test').Page) {
+  // Try multiple selectors for Ionic alert buttons
+  const alertBtn = page.getByRole('button', {
+    name: /ok|\u0111\u00e3 hi\u1ec3u|close/i,
+  });
+  if (await alertBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await page.waitForTimeout(1500);
+    await alertBtn.click();
+    await page.waitForTimeout(1500);
+  }
+}
+
+test('Smart Attendance \u2014 Mobile Employee Demo', async ({
+  page,
+  context,
+}) => {
   await context.grantPermissions(['geolocation']);
   await context.setGeolocation({ latitude: 10.7769, longitude: 106.7009 });
 
@@ -21,14 +37,20 @@ test('Smart Attendance \u2014 Mobile Employee Demo', async ({ page, context }) =
   await page.goto('/login');
   await page.waitForTimeout(2000);
 
-  const emailInput = page.locator('input[type="email"], ion-input[type="email"] input').first();
-  const passwordInput = page.locator('input[type="password"], ion-input[type="password"] input').first();
+  const emailInput = page
+    .locator('input[type="email"], ion-input[type="email"] input')
+    .first();
+  const passwordInput = page
+    .locator('input[type="password"], ion-input[type="password"] input')
+    .first();
   await emailInput.fill('employee001@demo.com');
   await page.waitForTimeout(500);
   await passwordInput.fill('Employee@123');
   await page.waitForTimeout(500);
 
-  const submitBtn = page.locator('ion-button[type="submit"], button[type="submit"]').first();
+  const submitBtn = page
+    .locator('ion-button[type="submit"], button[type="submit"]')
+    .first();
   await submitBtn.click();
   await page.waitForURL(/\/(tabs|home)/, { timeout: 15000 });
   await page.waitForTimeout(3000);
@@ -39,34 +61,23 @@ test('Smart Attendance \u2014 Mobile Employee Demo', async ({ page, context }) =
   await page.waitForTimeout(2000);
 
   // Check In
-  const checkInBtn = page.getByText(/check in/i).first();
+  const checkInBtn = page.locator('.btn-checkin');
   if (await checkInBtn.isVisible().catch(() => false)) {
     await checkInBtn.click();
-    await page.waitForTimeout(5000);
-
-    // Dismiss alert
-    const okBtn = page.locator('ion-alert button, .alert-button').last();
-    if (await okBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await page.waitForTimeout(2000);
-      await okBtn.click();
-    }
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(6000);
+    await dismissAlert(page);
+    await page.waitForTimeout(3000);
   }
 
   // ========================================
   // SCENE 3: Check-out
   // ========================================
-  const checkOutBtn = page.getByText(/check out/i).first();
-  if (await checkOutBtn.isVisible().catch(() => false)) {
+  const checkOutBtn = page.locator('.btn-checkout');
+  if (await checkOutBtn.isVisible({ timeout: 8000 }).catch(() => false)) {
     await checkOutBtn.click();
-    await page.waitForTimeout(5000);
-
-    const okBtn2 = page.locator('ion-alert button, .alert-button').last();
-    if (await okBtn2.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await page.waitForTimeout(2000);
-      await okBtn2.click();
-    }
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(6000);
+    await dismissAlert(page);
+    await page.waitForTimeout(3000);
   }
 
   // ========================================

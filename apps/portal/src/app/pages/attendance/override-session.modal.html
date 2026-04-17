@@ -2,7 +2,17 @@
   <div class="modal-header">
     <div class="header-left">
       <div class="icon-box warning">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
           <path d="M12 8v4"></path>
           <path d="M12 16h.01"></path>
@@ -13,48 +23,126 @@
         <p>Cập nhật kết quả điểm danh thủ công</p>
       </div>
     </div>
-    <button class="btn-close" (click)="onCancel()" type="button" aria-label="Đóng">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    <button
+      class="btn-close"
+      (click)="onCancel()"
+      type="button"
+      aria-label="Đóng"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
     </button>
   </div>
 
   <div class="modal-body">
     <div class="warning-banner">
       <div class="banner-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
       </div>
-      <div class="banner-text">Hành động này sẽ được ghi vào <strong>Audit Log</strong> hệ thống vĩnh viễn và không thể hoàn tác.</div>
+      <div class="banner-text">
+        Hành động này sẽ được ghi vào <strong>Audit Log</strong> hệ thống vĩnh
+        viễn và không thể hoàn tác.
+      </div>
     </div>
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="ocean-form">
       <div class="form-group">
-        <label>Trạng thái mới <span class="required">*</span></label>
+        <label for="override-status"
+          >Trạng thái mới <span class="required">*</span></label
+        >
         <div class="select-wrapper">
-          <select formControlName="status" class="form-control" [class.is-invalid]="form.get('status')?.invalid && form.get('status')?.touched">
-            <option value="" disabled selected>-- Vui lòng chọn trạng thái --</option>
+          <select
+            id="override-status"
+            formControlName="status"
+            class="form-control"
+            [class.is-invalid]="form.get('status')?.invalid && form.get('status')?.touched"
+          >
+            <option value="" disabled selected>
+              -- Vui lòng chọn trạng thái --
+            </option>
             @for (s of options; track s) {
-              <option [value]="s">{{ formatStatus(s) }}</option>
+            <option [value]="s">{{ formatStatus(s) }}</option>
             }
           </select>
-          <svg class="select-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          <svg
+            class="select-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
         </div>
       </div>
 
       @if (form.get('status')?.value) {
-        <div class="preview-box">
-          <span class="preview-label">Xem trước:</span>
-          <div class="status-badge before">{{ formatStatus(currentStatus) }}</div>
-          <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-          <div class="status-badge after">{{ formatStatus(form.get('status')?.value) }}</div>
+      <div class="preview-box">
+        <span class="preview-label">Xem trước:</span>
+        <div class="status-badge before">{{ formatStatus(currentStatus) }}</div>
+        <svg
+          class="arrow-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+        <div class="status-badge after">
+          {{ formatStatus(form.get('status')?.value) }}
         </div>
+      </div>
       }
 
       <div class="form-group">
         <div class="label-row">
-          <label>Lý do ghi đè <span class="required">*</span></label>
-          <span class="char-count" [class.limit-reached]="charCount >= 500">{{ charCount }}/500</span>
+          <label for="override-note"
+            >Lý do ghi đè <span class="required">*</span></label
+          >
+          <span class="char-count" [class.limit-reached]="charCount >= 500"
+            >{{ charCount }}/500</span
+          >
         </div>
         <textarea
+          id="override-note"
           formControlName="note"
           class="form-control"
           rows="4"
@@ -66,7 +154,14 @@
   </div>
 
   <div class="modal-footer">
-    <button type="button" class="btn-cancel" (click)="onCancel()" [disabled]="loading()">Hủy bỏ</button>
+    <button
+      type="button"
+      class="btn-cancel"
+      (click)="onCancel()"
+      [disabled]="loading()"
+    >
+      Hủy bỏ
+    </button>
     <button
       type="button"
       class="btn-submit warning"
@@ -74,11 +169,9 @@
       [disabled]="form.invalid || loading()"
     >
       @if (loading()) {
-        <div class="spinner-small"></div>
-        <span>Đang xử lý...</span>
-      } @else {
-        Xác nhận ghi đè
-      }
+      <div class="spinner-small"></div>
+      <span>Đang xử lý...</span>
+      } @else { Xác nhận ghi đè }
     </button>
   </div>
 </div>

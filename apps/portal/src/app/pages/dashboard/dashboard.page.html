@@ -13,28 +13,56 @@
   <!-- KPI Cards Row -->
   <div class="kpi-row">
     <div class="kpi-card">
-      <sa-icon icon="solar:users-group-rounded-bold" [size]="52" [iconSize]="26" bgColor="rgba(22,163,106,0.1)" color="#16a34a" variant="rounded"></sa-icon>
+      <app-sa-icon
+        icon="solar:users-group-rounded-bold"
+        [size]="52"
+        [iconSize]="26"
+        bgColor="rgba(22,163,106,0.1)"
+        color="#16a34a"
+        variant="rounded"
+      ></app-sa-icon>
       <div class="kpi-info">
         <span class="kpi-label">Tổng nhân viên</span>
         <span class="kpi-value">{{ o.total_employees }}</span>
       </div>
     </div>
     <div class="kpi-card">
-      <sa-icon icon="solar:buildings-bold" [size]="52" [iconSize]="26" bgColor="rgba(59,130,246,0.1)" color="#3b82f6" variant="rounded"></sa-icon>
+      <app-sa-icon
+        icon="solar:buildings-bold"
+        [size]="52"
+        [iconSize]="26"
+        bgColor="rgba(59,130,246,0.1)"
+        color="#3b82f6"
+        variant="rounded"
+      ></app-sa-icon>
       <div class="kpi-info">
         <span class="kpi-label">Tổng chi nhánh</span>
         <span class="kpi-value">{{ o.total_branches }}</span>
       </div>
     </div>
     <div class="kpi-card">
-      <sa-icon icon="solar:check-circle-bold" [size]="52" [iconSize]="26" bgColor="rgba(245,158,11,0.1)" color="#f59e0b" variant="rounded"></sa-icon>
+      <app-sa-icon
+        icon="solar:check-circle-bold"
+        [size]="52"
+        [iconSize]="26"
+        bgColor="rgba(245,158,11,0.1)"
+        color="#f59e0b"
+        variant="rounded"
+      ></app-sa-icon>
       <div class="kpi-info">
         <span class="kpi-label">Check-in hôm nay</span>
         <span class="kpi-value">{{ o.today.checked_in }}</span>
       </div>
     </div>
     <div class="kpi-card">
-      <sa-icon icon="solar:danger-triangle-bold" [size]="52" [iconSize]="26" bgColor="rgba(239,68,68,0.1)" color="#ef4444" variant="rounded"></sa-icon>
+      <app-sa-icon
+        icon="solar:danger-triangle-bold"
+        [size]="52"
+        [iconSize]="26"
+        bgColor="rgba(239,68,68,0.1)"
+        color="#ef4444"
+        variant="rounded"
+      ></app-sa-icon>
       <div class="kpi-info">
         <span class="kpi-label">Vắng hôm nay</span>
         <span class="kpi-value">{{ o.today.absent }}</span>
@@ -79,7 +107,10 @@
 
   } @else {
   <div class="empty-state">
-    <p>Chưa có dữ liệu — admin cần trigger cron daily-summary để khởi tạo summaries.</p>
+    <p>
+      Chưa có dữ liệu — admin cần trigger cron daily-summary để khởi tạo
+      summaries.
+    </p>
   </div>
   }
 </div>

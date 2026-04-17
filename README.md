@@ -316,9 +316,53 @@ Xem [`PROMPT_LOG.md`](PROMPT_LOG.md) để hiểu cách team làm việc với A
 
 ## 🎬 Demo
 
-- **Video demo:** _Sẽ cập nhật sau khi quay video_
-- **Live demo:** _Sẽ cập nhật nếu deploy_
-- **Demo script:** [`docs/demo-script.md`](docs/demo-script.md) — kịch bản 8-10 phút self-shoot
+### Video demo (E2E automated)
+
+Các video được quay tự động bằng Playwright E2E test, mô phỏng luồng sử dụng thực tế:
+
+| Video                                                                     | Mô tả                                                                                                                            | Thời lượng |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| [`portal-demo.webm`](e2e/videos/final/portal-demo.webm)                   | **Portal Admin/Manager** — Login → Dashboard (KPI, heatmap, top chi nhánh) → Quản lý nhân viên → Chấm công → Bất thường → Logout | ~1.6 phút  |
+| [`mobile-demo.webm`](e2e/videos/final/mobile-demo.webm)                   | **Mobile Employee** — Login → Check-in (GPS) → Check-out → Lịch sử → Profile → Logout                                            | ~50 giây   |
+| [`smart-attendance-demo.mp4`](e2e/videos/final/smart-attendance-demo.mp4) | **Combined** — Portal + Mobile ghép lại                                                                                          | ~2.4 phút  |
+
+### Highlight tính năng sáng tạo
+
+1. **Trust Score Engine** — Mỗi check-in được chấm 0–100 điểm dựa trên 12 risk flags (GPS accuracy, WiFi BSSID, device trust, mock location, impossible travel, VPN). Logic thuần túy, không I/O, 100% unit tested.
+2. **Anomaly Dashboard** — Background job (BullMQ) phân tích dữ liệu 7 ngày, phát hiện: chi nhánh có tỷ lệ trễ đột biến, nhân viên trust score thấp liên tục, thiết bị mới chưa xác minh. Kết quả cache Redis, hiển thị real-time.
+3. **Anti-fraud 3 lớp** — Hard validation (reject ngay) → Risk flags (soft signals) → Trust score (weighted sum). Failed attempts vẫn ghi log để forensic.
+4. **Override với Audit** — Manager có thể override attendance session, mọi thay đổi ghi audit log đầy đủ (before/after JSON).
+
+### Kịch bản demo chi tiết
+
+Xem [`docs/demo-script.md`](docs/demo-script.md) — kịch bản 8-10 phút self-shoot.
+
+### Cách chạy E2E test + quay video
+
+```bash
+# Đảm bảo api, portal, mobile đang chạy
+pnpm nx serve api
+pnpm nx serve portal
+pnpm nx serve mobile --port 8100
+
+# Seed data (bao gồm data cho hôm nay)
+pnpm prisma db seed
+
+# Trigger daily-summary job cho hôm nay
+curl -X POST http://localhost:3000/api/v1/admin/jobs/daily-summary/run \
+  -H 'Authorization: Bearer <admin_token>' \
+  -H 'Content-Type: application/json' \
+  -d '{"for_date":"YYYY-MM-DD"}'  # thay bằng ngày hôm nay
+
+# Trigger anomaly-detection job
+curl -X POST http://localhost:3000/api/v1/admin/jobs/anomaly-detection/run \
+  -H 'Authorization: Bearer <admin_token>'
+
+# Chạy E2E test (có quay video)
+cd e2e && npx playwright test --headed
+
+# Video output: e2e/videos/test-results/
+```
 
 ---
 
@@ -343,7 +387,7 @@ main ←─ release/* ←─ develop ←─ feature/*
 | Kiến trúc & scale |      20% | Schema multi-branch, index, partition, cache, queue (xem docs) |
 | Git Flow & Docker |      15% | GitFlow + Conventional Commits, `docker-compose up` 1 lệnh     |
 | AI workflow       |      15% | `CLAUDE.md` + `PROMPT_LOG.md` đầy đủ                           |
-| **Sáng tạo**      |  **25%** | **Trust Score + Anomaly Dashboard**                            |
+| **Sáng tạo**      |  **25%** | **Trust Score + Anomaly Dashboard + Anti-fraud 3 lớp**         |
 
 ---
 
@@ -355,8 +399,6 @@ Internal project — đề thi tuyển dụng.
 
 ## 👥 Team
 
-<!-- Replace with actual team info before submission. Keep table format. -->
-
-| Name          | Role                   | Contact            |
-| ------------- | ---------------------- | ------------------ |
-| _[Your Name]_ | _Full-stack Developer_ | _[email / github]_ |
+| Name       | Role                 | Contact                                              |
+| ---------- | -------------------- | ---------------------------------------------------- |
+| Tình Thành | Full-stack Developer | [github.com/tinhthanh](https://github.com/tinhthanh) |

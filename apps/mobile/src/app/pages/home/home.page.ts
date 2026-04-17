@@ -109,7 +109,13 @@ export class HomePage {
   async loadToday() {
     this.loadingTodaySession.set(true);
     try {
-      const today = new Date().toISOString().slice(0, 10);
+      // Use local date (not UTC) to match the backend's work_date which
+      // is computed in the branch timezone (Asia/Ho_Chi_Minh).
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+        2,
+        '0'
+      )}-${String(now.getDate()).padStart(2, '0')}`;
       const resp = await firstValueFrom(this.checkin.listMe(today, today));
       this.todaySession.set(resp.data[0] ?? null);
     } catch (err) {
@@ -263,7 +269,7 @@ export class HomePage {
     const message =
       primaryLine +
       (secondary.length > 0
-        ? `<br><br><strong>Cờ khác:</strong><br>${secondary.join('<br>')}`
+        ? `\n\nC\u1edd kh\u00e1c:\n${secondary.join('\n')}`
         : '');
 
     const a = await this.alert.create({

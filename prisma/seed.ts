@@ -256,9 +256,17 @@ async function seedAttendance(
   employees: { employeeCode: string; branchCode: string }[],
   baseDate: Date
 ) {
+  // Clean today's sessions that may have been created by e2e tests
+  // (they use non-deterministic IDs which conflict with seed's deterministic IDs)
+  const todayWd = workDate(baseDate, 0);
+  await prisma.attendanceEvent.deleteMany({
+    where: { session: { workDate: todayWd } },
+  });
+  await prisma.attendanceSession.deleteMany({ where: { workDate: todayWd } });
+
   for (let idx = 0; idx < employees.length; idx++) {
     const emp = employees[idx];
-    for (let dayOffset = 1; dayOffset <= ATTENDANCE_DAYS; dayOffset++) {
+    for (let dayOffset = 0; dayOffset <= ATTENDANCE_DAYS; dayOffset++) {
       const pattern = patternFor(idx, dayOffset);
       const wdStr = workDateString(baseDate, dayOffset);
       const wd = workDate(baseDate, dayOffset);
@@ -502,7 +510,9 @@ async function seedAnomalyScenarios(baseDate: Date) {
   );
 
   // -------------------------------------------------------
-  // S2: Create today sessions for DN-HaiChau → 7/10 late spike
+  // S2: Override DN-HaiChau today sessions → 7/10 late spike
+  // (today sessions already created by seedAttendance with dayOffset=0,
+  //  but we override DN-HaiChau to force a 70% late spike for anomaly demo)
   // -------------------------------------------------------
   const dnCodes: string[] = [];
   for (let i = 21; i <= 30; i++) {
@@ -563,7 +573,7 @@ async function seedAnomalyScenarios(baseDate: Date) {
     });
   }
   console.log(
-    `  S2: created ${dnCodes.length} today sessions for DN-HaiChau (${lateCount} late → 70% spike)`
+    `  S2: overrode ${dnCodes.length} today sessions for DN-HaiChau (${lateCount} late → 70% spike)`
   );
 
   // -------------------------------------------------------
@@ -645,7 +655,13 @@ async function seedAnomalyScenarios(baseDate: Date) {
 }
 
 async function main() {
-  const baseDate = new Date();
+  // Use local date (ICT = UTC+7) as base so "today" in seed matches
+  // the dashboard's todayWorkDate() which uses Asia/Ho_Chi_Minh.
+  const now = new Date();
+  const localMs = now.getTime() + 7 * 3_600_000;
+  const localIso = new Date(localMs).toISOString().slice(0, 10);
+  const baseDate = new Date(`${localIso}T00:00:00.000Z`);
+  console.log(`Base date (local ICT): ${localIso}`);
   console.log('Seeding roles...');
   await seedRoles();
   console.log('Seeding branches + departments + wifi + geofences...');
