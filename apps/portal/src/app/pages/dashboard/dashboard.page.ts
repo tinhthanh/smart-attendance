@@ -227,7 +227,7 @@ export class DashboardPage {
         left: 'center',
         bottom: 0,
         show: false,
-        inRange: { color: ['#e0f2fe', '#38bdf8', '#0284c7', '#075985'] },
+        inRange: { color: ['#ebf8f9', '#47BAC1', '#208BDE', '#1664A3'] },
       },
       series: [{
         type: 'heatmap',
