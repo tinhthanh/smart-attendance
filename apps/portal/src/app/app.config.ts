@@ -13,7 +13,7 @@ import { AuthService } from './core/auth/auth.service';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideIonicAngular({ mode: 'md' }),
+    provideIonicAngular({ mode: 'ios' }),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideRouter(appRoutes),
     {

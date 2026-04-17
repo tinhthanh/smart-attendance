@@ -17,9 +17,7 @@ import {
   IonIcon,
   IonLabel,
   IonList,
-  IonNote,
   IonSpinner,
-  IonText,
   IonTitle,
   IonToolbar,
 } from '@ionic/angular/standalone';
@@ -80,12 +78,10 @@ type CheckinResult =
     IonButton,
     IonLabel,
     IonList,
-    IonNote,
     IonChip,
     IonBadge,
     IonIcon,
     IonSpinner,
-    IonText,
   ],
   templateUrl: './home.page.html',
 })
