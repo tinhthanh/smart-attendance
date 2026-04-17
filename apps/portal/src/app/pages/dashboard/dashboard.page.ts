@@ -227,18 +227,19 @@ export class DashboardPage {
         left: 'center',
         bottom: 0,
         show: false,
-        inRange: { color: ['#ebf8f9', '#47BAC1', '#208BDE', '#1664A3'] },
+        inRange: { color: ['#f1f5f9', '#47BAC1', '#208BDE', '#1664A3'] },
       },
       series: [{
         type: 'heatmap',
         data,
-        label: {
-          show: true,
-          fontSize: 11,
-          color: '#fff',
-          formatter: (p: { data: number[] }) => p.data[2] > 0 ? String(p.data[2]) : ''
-        },
+        label: { show: false },
         itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 10,
+            shadowColor: 'rgba(0,0,0,0.2)'
+          }
+        }
       }],
     };
   }
