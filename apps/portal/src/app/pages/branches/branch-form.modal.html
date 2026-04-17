@@ -1,77 +1,107 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <ion-title>{{ isEdit ? 'Sửa chi nhánh' : 'Tạo chi nhánh' }}</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="onCancel()">Hủy</ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
+<div class="modal-container">
+  <div class="modal-header">
+    <h2>{{ isEdit ? 'Sửa chi nhánh' : 'Tạo chi nhánh mới' }}</h2>
+    <button class="btn-close" (click)="onCancel()">
+      <ion-icon name="close-outline"></ion-icon>
+    </button>
+  </div>
 
-<ion-content class="ion-padding">
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <ion-item>
-      <ion-input
-        label="Mã chi nhánh"
-        labelPlacement="floating"
-        formControlName="code"
-        placeholder="HCM-Q1"
-        helperText="Chữ hoa, số, dấu gạch ngang"
-      ></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-input
-        label="Tên"
-        labelPlacement="floating"
-        formControlName="name"
-      ></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-input
-        label="Địa chỉ"
-        labelPlacement="floating"
-        formControlName="address"
-      ></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-input
-        label="Vĩ độ (latitude)"
-        labelPlacement="floating"
-        type="number"
-        formControlName="latitude"
-      ></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-input
-        label="Kinh độ (longitude)"
-        labelPlacement="floating"
-        type="number"
-        formControlName="longitude"
-      ></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-input
-        label="Bán kính (m) 50-1000"
-        labelPlacement="floating"
-        type="number"
-        formControlName="radius_meters"
-      ></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-input
-        label="Múi giờ"
-        labelPlacement="floating"
-        formControlName="timezone"
-      ></ion-input>
-    </ion-item>
-    <br />
-    <ion-button
-      expand="block"
+  <div class="modal-content">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" id="branch-form">
+      <div class="form-group">
+        <label for="branchCode">Mã chi nhánh</label>
+        <input id="branchCode" type="text" formControlName="code" placeholder="Ví dụ: HCM-Q1" />
+        <span class="helper-text"
+          >Sử dụng chữ hoa, số và dấu gạch ngang. Ít nhất 3 ký tự.</span
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="branchName">Tên chi nhánh</label>
+        <input
+          id="branchName"
+          type="text"
+          formControlName="name"
+          placeholder="Nhập tên chi nhánh"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="branchAddress">Địa chỉ</label>
+        <input
+          id="branchAddress"
+          type="text"
+          formControlName="address"
+          placeholder="Nhập địa chỉ đầy đủ"
+        />
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
+        <div class="form-group">
+          <label for="branchLat">Vĩ độ (Latitude)</label>
+          <input
+            id="branchLat"
+            type="number"
+            step="any"
+            formControlName="latitude"
+            placeholder="Ví dụ: 10.762622"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="branchLng">Kinh độ (Longitude)</label>
+          <input
+            id="branchLng"
+            type="number"
+            step="any"
+            formControlName="longitude"
+            placeholder="Ví dụ: 106.660172"
+          />
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
+        <div class="form-group">
+          <label for="branchRadius">Bán kính cho phép (m)</label>
+          <input
+            id="branchRadius"
+            type="number"
+            formControlName="radius_meters"
+            placeholder="Từ 50 đến 1000m"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="branchTz">Múi giờ</label>
+          <input
+            id="branchTz"
+            type="text"
+            formControlName="timezone"
+            placeholder="Ví dụ: Asia/Ho_Chi_Minh"
+          />
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-footer">
+    <button
+      type="button"
+      class="btn-cancel"
+      (click)="onCancel()"
+      [disabled]="loading()"
+    >
+      Hủy
+    </button>
+    <button
       type="submit"
+      form="branch-form"
+      class="btn-submit"
       [disabled]="form.invalid || loading()"
     >
       @if (loading()) {
-      <ion-spinner name="crescent"></ion-spinner>
-      } @else { {{ isEdit ? 'Lưu thay đổi' : 'Tạo' }} }
-    </ion-button>
-  </form>
-</ion-content>
+      <ion-icon name="sync-outline"></ion-icon>
+      } @else { {{ isEdit ? 'Lưu thay đổi' : 'Tạo mới' }} }
+    </button>
+  </div>
+</div>

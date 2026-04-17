@@ -4,35 +4,14 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   ModalController,
   ToastController,
-  IonButton,
-  IonButtons,
-  IonChip,
-  IonContent,
-  IonGrid,
-  IonCol,
-  IonDatetime,
-  IonDatetimeButton,
-  IonPopover,
-  IonHeader,
   IonIcon,
-  IonCard,
-  IonCardContent,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonMenuButton,
-  IonNote,
-  IonRow,
-  IonSearchbar,
-  IonSelect,
-  IonSelectOption,
-  IonSpinner,
-  IonText,
-  IonTitle,
-  IonToolbar,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { alertCircleOutline, downloadOutline } from 'ionicons/icons';
+import {
+  alertCircleOutline,
+  downloadOutline,
+  searchOutline,
+} from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
 import { AttendanceApiService } from '../../core/attendance/attendance.api.service';
 import { AuthService } from '../../core/auth/auth.service';
@@ -51,6 +30,7 @@ import { formatAttendanceStatus } from '@smart-attendance/shared/constants';
 addIcons({
   'alert-circle-outline': alertCircleOutline,
   'download-outline': downloadOutline,
+  'search-outline': searchOutline,
 });
 
 function isoDate(d: Date): string {
@@ -66,37 +46,9 @@ function daysAgo(n: number): string {
 @Component({
   selector: 'app-sessions-list',
   standalone: true,
-  imports: [
-    RouterLink,
-    DatePipe,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    IonButtons,
-    IonMenuButton,
-    IonSearchbar,
-    IonSelect,
-    IonSelectOption,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonNote,
-    IonChip,
-    IonButton,
-    IonIcon,
-    IonSpinner,
-    IonText,
-    IonGrid,
-    IonRow,
-    IonCol,
-    IonCard,
-    IonCardContent,
-    IonDatetime,
-    IonDatetimeButton,
-    IonPopover,
-  ],
+  imports: [RouterLink, DatePipe, IonIcon],
   templateUrl: './sessions-list.page.html',
+  styleUrl: './sessions-list.page.scss',
 })
 export class SessionsListPage {
   private readonly api = inject(AttendanceApiService);
@@ -207,30 +159,28 @@ export class SessionsListPage {
   }
 
   onDateFrom(event: Event) {
-    let v = (event as any).detail?.value || (event.target as any).value;
-    if (typeof v === 'string') v = v.substring(0, 10);
+    const v = (event.target as HTMLInputElement).value;
     this.query.update((q) => ({ ...q, page: 1, date_from: v || undefined }));
     this.syncUrl();
     this.reload();
   }
 
   onDateTo(event: Event) {
-    let v = (event as any).detail?.value || (event.target as any).value;
-    if (typeof v === 'string') v = v.substring(0, 10);
+    const v = (event.target as HTMLInputElement).value;
     this.query.update((q) => ({ ...q, page: 1, date_to: v || undefined }));
     this.syncUrl();
     this.reload();
   }
 
   onBranchChange(event: Event) {
-    const v = (event as CustomEvent<{ value: string | null }>).detail.value;
+    const v = (event.target as HTMLSelectElement).value;
     this.query.update((q) => ({ ...q, page: 1, branch_id: v || undefined }));
     this.syncUrl();
     this.reload();
   }
 
   onStatusChange(event: Event) {
-    const v = (event as CustomEvent<{ value: string | null }>).detail.value;
+    const v = (event.target as HTMLSelectElement).value;
     this.query.update((q) => ({
       ...q,
       page: 1,
@@ -241,8 +191,12 @@ export class SessionsListPage {
   }
 
   onEmployeeSearch(event: Event) {
-    // Note: BE employee_id expects UUID, not free search — skip for now, use filter from list
-    void event;
+    const v = (event.target as HTMLInputElement).value;
+    // For now, API doesn't support free-text search on employee for this endpoint.
+    // In original code it was ignored, we'll keep it ignored or map it if supported.
+    this.query.update((q) => ({ ...q, page: 1, employee_id: v || undefined }));
+    this.syncUrl();
+    this.reload();
   }
 
   prevPage() {

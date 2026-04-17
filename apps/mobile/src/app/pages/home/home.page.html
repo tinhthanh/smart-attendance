@@ -1,113 +1,180 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <ion-title>Chấm công</ion-title>
-  </ion-toolbar>
-</ion-header>
-<ion-content class="ion-padding">
-  @if (!online()) {
-  <ion-card color="warning">
-    <ion-card-content>
-      <ion-icon name="cloud-offline-outline"></ion-icon>
-      &nbsp;Mất kết nối mạng
-    </ion-card-content>
-  </ion-card>
-  } @if (user(); as u) {
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>{{ u.full_name }}</ion-card-title>
-      <ion-card-subtitle>
-        @if (u.employee?.primary_branch; as b) { {{ b.name }} } @else { Chưa
-        phân công chi nhánh }
-      </ion-card-subtitle>
-    </ion-card-header>
-    <ion-card-content>
-      <ion-chip color="tertiary">
-        <ion-label>{{ u.employee?.employee_code || u.email }}</ion-label>
-      </ion-chip>
-      @if (u.employee?.department; as d) {
-      <ion-chip color="primary">
-        <ion-label>{{ d.name }}</ion-label>
-      </ion-chip>
-      }
-    </ion-card-content>
-  </ion-card>
-  } @if (loadingTodaySession()) {
-  <div class="ion-text-center ion-padding">
-    <ion-spinner name="crescent"></ion-spinner>
+<ion-content [fullscreen]="true">
+  <div class="background-elements">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
   </div>
-  } @else {
-  <ion-card>
-    <ion-card-header>
-      <ion-card-subtitle>Hôm nay</ion-card-subtitle>
-      <ion-card-title>
-        @switch (status()) { @case ('none') { Chưa chấm công } @case
-        ('checked_in') { Đã check-in } @case ('done') { Hoàn thành } }
-      </ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      @if (todaySession(); as s) {
-      <ion-list>
-        @if (s.check_in_at) {
-        <p>
-          <strong>Check-in:</strong>
-          {{ s.check_in_at | date: 'HH:mm:ss' }}
-        </p>
-        } @if (s.check_out_at) {
-        <p>
-          <strong>Check-out:</strong>
-          {{ s.check_out_at | date: 'HH:mm:ss' }}
-        </p>
-        <p>
-          <strong>Tổng giờ làm:</strong>
-          {{ s.worked_minutes }} phút
-        </p>
-        } @if (s.trust_score !== null) {
-        <p>
-          <strong>Trust Score:</strong>
-          <ion-badge
-            [color]="s.trust_score >= 70 ? 'success' : s.trust_score >= 40 ? 'warning' : 'danger'"
-            [attr.aria-label]="'Điểm tin cậy ' + s.trust_score"
-            >{{ s.trust_score }}/100</ion-badge
-          >
-        </p>
+
+  <div class="header-section">
+    <div class="header-content">
+      <div class="branding">
+        <ion-icon name="finger-print-outline" class="brand-icon"></ion-icon>
+        <span class="brand-text">Smart Attendance</span>
+      </div>
+      <!-- You could put a notification icon here later -->
+    </div>
+  </div>
+
+  <div class="main-content">
+    @if (!online()) {
+    <div class="alert-banner offline">
+      <ion-icon name="cloud-offline-outline"></ion-icon>
+      <span>Mất kết nối mạng. Vui lòng kiểm tra lại.</span>
+    </div>
+    } @if (user(); as u) {
+    <!-- User Profile Card -->
+    <ion-card class="glass-card profile-card">
+      <div class="profile-header">
+        <div class="avatar-container">
+          <div class="avatar">{{ u.full_name.charAt(0) }}</div>
+        </div>
+        <div class="user-info">
+          <h2 class="user-name">{{ u.full_name }}</h2>
+          <p class="branch-name">
+            <ion-icon name="location-outline"></ion-icon>
+            @if (u.employee?.primary_branch; as b) { {{ b.name }} } @else { Chưa
+            phân công chi nhánh }
+          </p>
+        </div>
+      </div>
+
+      <div class="tags-container">
+        <div class="tag code-tag">
+          <ion-icon name="id-card-outline"></ion-icon>
+          {{ u.employee?.employee_code || u.email }}
+        </div>
+        @if (u.employee?.department; as d) {
+        <div class="tag dept-tag">
+          <ion-icon name="business-outline"></ion-icon>
+          {{ d.name }}
+        </div>
         }
-      </ion-list>
+      </div>
+    </ion-card>
+    } @if (loadingTodaySession()) {
+    <div class="loading-state">
+      <ion-spinner name="dots" color="primary"></ion-spinner>
+      <p>Đang tải dữ liệu...</p>
+    </div>
+    } @else {
+    <!-- Today's Status Card -->
+    <ion-card class="glass-card status-card">
+      <div class="status-header">
+        <div class="date-badge">Hôm nay</div>
+        <div class="status-badge" [class]="status()">
+          @switch (status()) { @case ('none') { Chưa chấm công } @case
+          ('checked_in') { Đang làm việc } @case ('done') { Đã hoàn thành } }
+        </div>
+      </div>
+
+      <div class="status-body">
+        @if (todaySession(); as s) { @if (s.check_in_at) {
+        <div class="timeline-item">
+          <div class="dot in"></div>
+          <div class="timeline-content">
+            <span class="label">Check-in</span>
+            <span class="time">{{ s.check_in_at | date: 'HH:mm:ss' }}</span>
+          </div>
+        </div>
+        } @if (s.check_out_at) {
+        <div class="timeline-item">
+          <div class="dot out"></div>
+          <div class="timeline-content">
+            <span class="label">Check-out</span>
+            <span class="time">{{ s.check_out_at | date: 'HH:mm:ss' }}</span>
+          </div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-box">
+            <span class="stat-icon"
+              ><ion-icon name="time-outline"></ion-icon
+            ></span>
+            <div class="stat-info">
+              <span class="stat-value">{{ s.worked_minutes }}</span>
+              <span class="stat-label">phút làm việc</span>
+            </div>
+          </div>
+
+          @if (s.trust_score !== null) {
+          <div class="stat-box">
+            <span
+              class="stat-icon"
+              [class]="s.trust_score >= 70 ? 'text-success' : s.trust_score >= 40 ? 'text-warning' : 'text-danger'"
+            >
+              <ion-icon name="shield-checkmark-outline"></ion-icon>
+            </span>
+            <div class="stat-info">
+              <span class="stat-value">{{ s.trust_score }}</span>
+              <span class="stat-label">Độ tin cậy</span>
+            </div>
+          </div>
+          }
+        </div>
+        } } @else {
+        <div class="empty-state">
+          <div class="empty-icon-wrap">
+            <ion-icon name="calendar-clear-outline"></ion-icon>
+          </div>
+          <p>Sẵn sàng cho ngày làm việc mới!</p>
+        </div>
+        }
+      </div>
+    </ion-card>
+
+    <!-- Action Action Card -->
+    <div class="action-section">
+      @if (status() === 'none') {
+      <button
+        class="modern-action-btn btn-checkin"
+        [disabled]="submitting() || !online()"
+        (click)="onCheckIn()"
+      >
+        <div class="btn-content">
+          @if (submitting()) {
+          <ion-spinner name="crescent" class="btn-spinner"></ion-spinner>
+          <span>Đang xử lý...</span>
+          } @else {
+          <ion-icon name="log-in-outline" class="btn-icon"></ion-icon>
+          <div class="btn-text">
+            <span class="btn-title">Check In</span>
+            <span class="btn-subtitle">Bắt đầu ca làm việc</span>
+          </div>
+          }
+        </div>
+        <div class="btn-bg-effect"></div>
+      </button>
+
+      } @else if (status() === 'checked_in') {
+      <button
+        class="modern-action-btn btn-checkout"
+        [disabled]="submitting() || !online()"
+        (click)="onCheckOut()"
+      >
+        <div class="btn-content">
+          @if (submitting()) {
+          <ion-spinner name="crescent" class="btn-spinner"></ion-spinner>
+          <span>Đang xử lý...</span>
+          } @else {
+          <ion-icon name="log-out-outline" class="btn-icon"></ion-icon>
+          <div class="btn-text">
+            <span class="btn-title">Check Out</span>
+            <span class="btn-subtitle">Kết thúc ca làm việc</span>
+          </div>
+          }
+        </div>
+        <div class="btn-bg-effect"></div>
+      </button>
+
+      } @else {
+      <div class="success-banner">
+        <ion-icon name="checkmark-circle"></ion-icon>
+        <div class="success-text">
+          <h4>Tuyệt vời!</h4>
+          <p>Bạn đã hoàn thành chấm công hôm nay.</p>
+        </div>
+      </div>
       }
-    </ion-card-content>
-  </ion-card>
-
-  <br />
-
-  @if (status() === 'none') {
-  <ion-button
-    expand="block"
-    class="checkin-button"
-    color="primary"
-    [disabled]="submitting() || !online()"
-    (click)="onCheckIn()"
-  >
-    @if (submitting()) {
-    <ion-spinner name="crescent"></ion-spinner>
-    } @else { CHECK IN }
-  </ion-button>
-  } @else if (status() === 'checked_in') {
-  <ion-button
-    expand="block"
-    class="checkin-button"
-    color="secondary"
-    [disabled]="submitting() || !online()"
-    (click)="onCheckOut()"
-  >
-    @if (submitting()) {
-    <ion-spinner name="crescent"></ion-spinner>
-    } @else { CHECK OUT }
-  </ion-button>
-  } @else {
-  <ion-card color="success">
-    <ion-card-content>
-      <ion-icon name="checkmark-circle"></ion-icon>
-      &nbsp;Đã chấm công đầy đủ hôm nay
-    </ion-card-content>
-  </ion-card>
-  } }
+    </div>
+    }
+  </div>
 </ion-content>

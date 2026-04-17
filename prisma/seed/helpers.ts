@@ -18,7 +18,7 @@ export function sessionId(employeeCode: string, workDate: string): string {
 export function eventId(
   employeeCode: string,
   workDate: string,
-  type: 'check_in' | 'check_out',
+  type: 'check_in' | 'check_out'
 ): string {
   return deterministicId('event', employeeCode, workDate, type);
 }
@@ -47,7 +47,10 @@ export function scheduleId(name: string): string {
   return deterministicId('schedule', name);
 }
 
-export function scheduleAssignmentId(employeeCode: string, scheduleName: string): string {
+export function scheduleAssignmentId(
+  employeeCode: string,
+  scheduleName: string
+): string {
   return deterministicId('schedule-assignment', employeeCode, scheduleName);
 }
 
@@ -59,12 +62,26 @@ export function geofenceId(branchCode: string, geofenceName: string): string {
   return deterministicId('geofence', branchCode, geofenceName);
 }
 
+export function deviceId(employeeCode: string, fingerprint: string): string {
+  return deterministicId('device', employeeCode, fingerprint);
+}
+
+export function anomalyEventId(
+  employeeCode: string,
+  workDate: string,
+  suffix: string
+): string {
+  return deterministicId('anomaly-event', employeeCode, workDate, suffix);
+}
+
 export function hashPassword(plain: string): string {
   return bcrypt.hashSync(plain, BCRYPT_ROUNDS);
 }
 
 export function workDateString(base: Date, dayOffset: number): string {
-  const d = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), base.getUTCDate()));
+  const d = new Date(
+    Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), base.getUTCDate())
+  );
   d.setUTCDate(d.getUTCDate() - dayOffset);
   return d.toISOString().slice(0, 10); // YYYY-MM-DD
 }

@@ -1,0 +1,58 @@
+<ion-content class="login-content">
+  <div class="login-wrapper">
+    <div class="brand-section">
+      <div class="logo-circle">
+        <ion-icon name="finger-print-outline"></ion-icon>
+      </div>
+      <h1>Smart Attendance</h1>
+      <p>Cổng chấm công di động nội bộ</p>
+    </div>
+
+    <div class="form-container">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <div class="input-group">
+          <ion-item lines="none" class="custom-input">
+            <ion-icon name="mail-outline" slot="start"></ion-icon>
+            <ion-input
+              label="Email đăng nhập"
+              labelPlacement="floating"
+              type="email"
+              formControlName="email"
+            ></ion-input>
+          </ion-item>
+        </div>
+
+        <div class="input-group">
+          <ion-item lines="none" class="custom-input">
+            <ion-icon name="lock-closed-outline" slot="start"></ion-icon>
+            <ion-input
+              label="Mật khẩu"
+              labelPlacement="floating"
+              type="password"
+              formControlName="password"
+            ></ion-input>
+          </ion-item>
+        </div>
+
+        <div class="auth-actions">
+          <ion-button
+            expand="block"
+            type="submit"
+            class="submit-btn"
+            [disabled]="form.invalid || loading()"
+          >
+            @if (loading()) {
+            <ion-spinner name="crescent"></ion-spinner>
+            } @else { Vào ca làm việc
+            <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
+            }
+          </ion-button>
+        </div>
+      </form>
+    </div>
+
+    <div class="footer-note">
+      <p>Vui lòng liên hệ Quản lý hệ thống nếu quên mật khẩu.</p>
+    </div>
+  </div>
+</ion-content>

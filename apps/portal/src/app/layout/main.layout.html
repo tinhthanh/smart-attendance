@@ -1,46 +1,56 @@
-<ion-split-pane contentId="main-content">
-  <ion-menu contentId="main-content">
-    <ion-header>
-      <ion-toolbar color="primary">
-        <ion-title>Smart Attendance</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content>
-      <ion-list>
-        <ion-menu-toggle auto-hide="false">
-          <ion-item routerLink="/dashboard" routerLinkActive="selected">
-            <ion-icon slot="start" name="home-outline"></ion-icon>
-            <ion-label>Dashboard</ion-label>
-          </ion-item>
-          <ion-item routerLink="/branches" routerLinkActive="selected">
-            <ion-icon slot="start" name="business-outline"></ion-icon>
-            <ion-label>Chi nhánh</ion-label>
-          </ion-item>
-          <ion-item routerLink="/employees" routerLinkActive="selected">
-            <ion-icon slot="start" name="people-outline"></ion-icon>
-            <ion-label>Nhân viên</ion-label>
-          </ion-item>
-          <ion-item routerLink="/attendance" routerLinkActive="selected">
-            <ion-icon slot="start" name="time-outline"></ion-icon>
-            <ion-label>Chấm công</ion-label>
-          </ion-item>
-          <ion-item routerLink="/anomalies" routerLinkActive="selected">
-            <ion-icon slot="start" name="alert-circle-outline"></ion-icon>
-            <ion-label>Bất thường</ion-label>
-          </ion-item>
-        </ion-menu-toggle>
-      </ion-list>
-    </ion-content>
-    @if (auth.currentUser(); as user) {
-    <ion-toolbar>
-      <ion-chip color="tertiary">
-        <ion-label>{{ userLabel() }}</ion-label>
-      </ion-chip>
-      <ion-button slot="end" fill="clear" (click)="onLogout()">
-        <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
-      </ion-button>
-    </ion-toolbar>
-    }
-  </ion-menu>
-  <ion-router-outlet id="main-content"></ion-router-outlet>
-</ion-split-pane>
+<div class="app-container">
+  <!-- Static Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>Smart Attendance</h1>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item" routerLink="/dashboard" routerLinkActive="selected">
+        <ion-icon name="home-outline"></ion-icon>
+        <span>Dashboard</span>
+      </a>
+      <a class="nav-item" routerLink="/branches" routerLinkActive="selected">
+        <ion-icon name="business-outline"></ion-icon>
+        <span>Chi nhánh</span>
+      </a>
+      <a class="nav-item" routerLink="/employees" routerLinkActive="selected">
+        <ion-icon name="people-outline"></ion-icon>
+        <span>Nhân viên</span>
+      </a>
+      <a class="nav-item" routerLink="/attendance" routerLinkActive="selected">
+        <ion-icon name="time-outline"></ion-icon>
+        <span>Chấm công</span>
+      </a>
+      <a class="nav-item" routerLink="/anomalies" routerLinkActive="selected">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>Bất thường</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="main-content-area">
+    <!-- Topbar -->
+    <header class="topbar">
+      @if (auth.currentUser(); as user) {
+      <div class="user-badge">
+        <span class="user-label">{{ userLabel() }}</span>
+        <button
+          class="btn-logout"
+          (click)="onLogout()"
+          aria-label="Đăng xuất"
+          title="Đăng xuất"
+        >
+          <ion-icon name="log-out-outline"></ion-icon>
+        </button>
+      </div>
+      }
+    </header>
+
+    <!-- Router Content -->
+    <div class="content-wrapper">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

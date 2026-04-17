@@ -1,279 +1,170 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
-    </ion-buttons>
-    <ion-title>Chấm công</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="openExportModal()" [disabled]="loading()">
-        <ion-icon slot="start" name="download-outline"></ion-icon>
+<div class="page-container">
+  <div class="page-header">
+    <div class="title-section">
+      <h1>Chấm công</h1>
+      <p>Quản lý và tra cứu lịch sử chấm công của nhân sự</p>
+      @if (isManagerOnly()) {
+      <div class="warning-badge">
+        Chỉ xem phiên thuộc chi nhánh được phân công
+      </div>
+      }
+    </div>
+
+    <div class="actions">
+      <button
+        class="btn-secondary"
+        (click)="openExportModal()"
+        [disabled]="loading()"
+      >
+        <ion-icon name="download-outline"></ion-icon>
         Xuất CSV
-      </ion-button>
-    </ion-buttons>
-    @if (isManagerOnly()) {
-    <ion-chip color="warning" slot="end">
-      <ion-label>Chỉ xem phiên thuộc chi nhánh được phân công</ion-label>
-    </ion-chip>
-    }
-  </ion-toolbar>
-</ion-header>
+      </button>
+    </div>
+  </div>
 
-<ion-content class="ion-padding">
-  <ion-card
-    class="ion-no-margin ion-margin-bottom"
-    style="box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); border-radius: 12px"
-  >
-    <ion-card-content>
-      <ion-grid class="ion-no-padding">
-        <ion-row class="ion-align-items-center" style="gap: 12px">
-          <!-- Nút lọc nhanh -->
-          <ion-col size="12" size-md="auto">
-            <div class="quick-filters" style="display: flex; gap: 8px">
-              <ion-button
-                [fill]="isActiveFilter(0) ? 'solid' : 'outline'"
-                [color]="isActiveFilter(0) ? 'primary' : 'medium'"
-                size="small"
-                (click)="quickFilter(0)"
-                style="text-transform: none; margin: 0; min-width: 80px"
-                >Hôm nay</ion-button
-              >
-              <ion-button
-                [fill]="isActiveFilter(7) ? 'solid' : 'outline'"
-                [color]="isActiveFilter(7) ? 'primary' : 'medium'"
-                size="small"
-                (click)="quickFilter(7)"
-                style="text-transform: none; margin: 0; min-width: 80px"
-                >7 ngày</ion-button
-              >
-              <ion-button
-                [fill]="isActiveFilter(30) ? 'solid' : 'outline'"
-                [color]="isActiveFilter(30) ? 'primary' : 'medium'"
-                size="small"
-                (click)="quickFilter(30)"
-                style="text-transform: none; margin: 0; min-width: 80px"
-                >30 ngày</ion-button
-              >
-            </div>
-          </ion-col>
+  <div class="filters-panel">
+    <div class="filters-row">
+      <div class="quick-filters">
+        <button [class.active]="isActiveFilter(0)" (click)="quickFilter(0)">
+          Hôm nay
+        </button>
+        <button [class.active]="isActiveFilter(7)" (click)="quickFilter(7)">
+          7 ngày
+        </button>
+        <button [class.active]="isActiveFilter(30)" (click)="quickFilter(30)">
+          30 ngày
+        </button>
+      </div>
 
-          <!-- Tìm kiếm -->
-          <ion-col size="12" size-md="4" style="flex: 1">
-            <ion-searchbar
-              style="
-                padding: 0;
-                --box-shadow: none;
-                border: 1px solid var(--ion-color-step-200);
-                border-radius: 8px;
-                --background: var(--ion-color-step-50);
-              "
-              placeholder="Tìm mã / tên nhân viên..."
-              debounce="400"
-              (ionInput)="onEmployeeSearch($event)"
-            ></ion-searchbar>
-          </ion-col>
-        </ion-row>
+      <div class="search-input">
+        <ion-icon name="search-outline"></ion-icon>
+        <input
+          type="text"
+          placeholder="Tìm mã / tên nhân viên..."
+          (input)="onEmployeeSearch($event)"
+        />
+      </div>
+    </div>
 
-        <ion-row class="ion-margin-top ion-align-items-center">
-          <!-- Lọc ngày -->
-          <ion-col
-            size="6"
-            size-md="3"
-            class="ion-no-padding"
-            style="padding-right: 12px"
-          >
-            <ion-label
-              position="stacked"
-              color="medium"
-              style="font-size: 13px; margin-bottom: 6px; display: block"
-              >Từ ngày</ion-label
-            >
-            <div
-              style="
-                background: var(--ion-color-step-50);
-                border: 1px solid var(--ion-color-step-200);
-                border-radius: 8px;
-                padding: 4px;
-                display: inline-block;
-              "
-            >
-              <ion-datetime-button
-                datetime="date_from_dt"
-              ></ion-datetime-button>
-            </div>
-            <ion-popover [keepContentsMounted]="true">
-              <ng-template>
-                <ion-datetime
-                  id="date_from_dt"
-                  presentation="date"
-                  [value]="query().date_from"
-                  (ionChange)="onDateFrom($event)"
-                ></ion-datetime>
-              </ng-template>
-            </ion-popover>
-          </ion-col>
-          <ion-col
-            size="6"
-            size-md="3"
-            class="ion-no-padding"
-            style="padding-right: 12px"
-          >
-            <ion-label
-              position="stacked"
-              color="medium"
-              style="font-size: 13px; margin-bottom: 6px; display: block"
-              >Đến ngày</ion-label
-            >
-            <div
-              style="
-                background: var(--ion-color-step-50);
-                border: 1px solid var(--ion-color-step-200);
-                border-radius: 8px;
-                padding: 4px;
-                display: inline-block;
-              "
-            >
-              <ion-datetime-button datetime="date_to_dt"></ion-datetime-button>
-            </div>
-            <ion-popover [keepContentsMounted]="true">
-              <ng-template>
-                <ion-datetime
-                  id="date_to_dt"
-                  presentation="date"
-                  [value]="query().date_to"
-                  (ionChange)="onDateTo($event)"
-                ></ion-datetime>
-              </ng-template>
-            </ion-popover>
-          </ion-col>
+    <div class="filters-row">
+      <div class="filter-group">
+        <label for="filterDateFrom">Từ ngày</label>
+        <input
+          id="filterDateFrom"
+          type="date"
+          [value]="query().date_from"
+          (change)="onDateFrom($event)"
+        />
+      </div>
 
-          <!-- Dropdowns -->
-          <ion-col
-            size="12"
-            size-md="3"
-            class="ion-no-padding"
-            style="padding-right: 12px"
-          >
-            <ion-item
-              lines="none"
-              style="
-                --background: var(--ion-color-step-50);
-                border: 1px solid var(--ion-color-step-200);
-                border-radius: 8px;
-              "
-            >
-              <ion-select
-                interface="popover"
-                placeholder="Chi nhánh"
-                (ionChange)="onBranchChange($event)"
-                style="width: 100%"
-              >
-                <ion-select-option [value]="null"
-                  >Tất cả chi nhánh</ion-select-option
-                >
-                @for (b of branches(); track b.id) {
-                <ion-select-option [value]="b.id"
-                  >{{ b.code }}</ion-select-option
-                >
-                }
-              </ion-select>
-            </ion-item>
-          </ion-col>
-          <ion-col size="12" size-md="3" class="ion-no-padding">
-            <ion-item
-              lines="none"
-              style="
-                --background: var(--ion-color-step-50);
-                border: 1px solid var(--ion-color-step-200);
-                border-radius: 8px;
-              "
-            >
-              <ion-select
-                interface="popover"
-                placeholder="Trạng thái"
-                (ionChange)="onStatusChange($event)"
-                style="width: 100%"
-              >
-                <ion-select-option [value]="null"
-                  >Tất cả trạng thái</ion-select-option
-                >
-                <ion-select-option value="on_time">Đúng giờ</ion-select-option>
-                <ion-select-option value="late">Đi trễ</ion-select-option>
-                <ion-select-option value="early_leave"
-                  >Về sớm</ion-select-option
-                >
-                <ion-select-option value="overtime">Tăng ca</ion-select-option>
-                <ion-select-option value="missing_checkout"
-                  >Quên checkout</ion-select-option
-                >
-                <ion-select-option value="absent">Vắng</ion-select-option>
-              </ion-select>
-            </ion-item>
-          </ion-col>
-        </ion-row>
-      </ion-grid>
-    </ion-card-content>
-  </ion-card>
+      <div class="filter-group">
+        <label for="filterDateTo">Đến ngày</label>
+        <input
+          id="filterDateTo"
+          type="date"
+          [value]="query().date_to"
+          (change)="onDateTo($event)"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label for="filterBranch">Chi nhánh</label>
+        <select id="filterBranch" (change)="onBranchChange($event)">
+          <option [value]="''">Tất cả chi nhánh</option>
+          @for (b of branches(); track b.id) {
+          <option [value]="b.id">{{ b.code }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="filterStatus">Trạng thái</label>
+        <select id="filterStatus" (change)="onStatusChange($event)">
+          <option [value]="''">Tất cả trạng thái</option>
+          <option value="on_time">Đúng giờ</option>
+          <option value="late">Đi trễ</option>
+          <option value="early_leave">Về sớm</option>
+          <option value="overtime">Tăng ca</option>
+          <option value="missing_checkout">Quên checkout</option>
+          <option value="absent">Vắng</option>
+        </select>
+      </div>
+    </div>
+  </div>
 
   @if (loading()) {
-  <ion-spinner name="crescent"></ion-spinner>
+  <div class="loading-state">
+    <p>Đang tải dữ liệu chấm công...</p>
+  </div>
   } @else if (sessions().length === 0) {
-  <div class="ion-text-center ion-padding-top">
-    <ion-icon
-      name="alert-circle-outline"
-      size="large"
-      color="medium"
-    ></ion-icon>
-    <br />
-    <ion-text color="medium">
-      Không có dữ liệu chấm công trong khoảng thời gian này
-    </ion-text>
+  <div class="empty-state">
+    <ion-icon name="alert-circle-outline"></ion-icon>
+    <p>Không có dữ liệu chấm công trong khoảng thời gian này</p>
   </div>
   } @else {
-  <ion-list>
+  <div class="list-container">
+    <div class="list-header">
+      <div class="col">NHÂN VIÊN</div>
+      <div class="col">THỜI GIAN</div>
+      <div class="col">KẾT QUẢ</div>
+    </div>
+
     @for (s of sessions(); track s.id) {
-    <ion-item [routerLink]="['/attendance', s.id]" detail="true">
-      <ion-label>
-        <h2>{{ s.work_date }} — {{ s.employee.full_name }}</h2>
-        <p>{{ s.employee.employee_code }} · {{ s.branch.name }}</p>
-        <p>
-          Vào: {{ s.check_in_at ? (s.check_in_at | date: 'HH:mm') : '--' }} ·
-          Ra: {{ s.check_out_at ? (s.check_out_at | date: 'HH:mm') : '--' }} @if
-          (s.worked_minutes) { · {{ s.worked_minutes }} phút }
-        </p>
-      </ion-label>
-      <ion-note slot="end">
-        <ion-chip [color]="statusColor(s.status)">
-          <ion-label>{{ s.status }}</ion-label>
-        </ion-chip>
+    <a [routerLink]="['/attendance', s.id]" class="list-row">
+      <div class="col-info">
+        <span class="date"
+          >{{ s.work_date | date: 'dd/MM/yyyy' }} —
+          <span class="name">{{ s.employee.full_name }}</span></span
+        >
+        <span class="sub-info"
+          >{{ s.employee.employee_code }} • {{ s.branch.name }}</span
+        >
+      </div>
+
+      <div class="col-time">
+        <span
+          >Vào: {{ s.check_in_at ? (s.check_in_at | date: 'HH:mm') : '--'
+          }}</span
+        >
+        <span
+          >Ra: {{ s.check_out_at ? (s.check_out_at | date: 'HH:mm') : '--'
+          }}</span
+        >
+        @if (s.worked_minutes) {
+        <span class="minutes">{{ s.worked_minutes }} phút làm việc</span>
+        }
+      </div>
+
+      <div class="col-status">
+        <span class="badge" [class]="statusColor(s.status)">
+          {{ formatStatus(s.status) }}
+        </span>
         @if (s.trust_score !== null) {
-        <ion-chip
-          [color]="trustColor(s.trust_score)"
+        <span
+          class="trust-score"
+          [class]="trustColor(s.trust_score)"
           [attr.aria-label]="'Điểm tin cậy ' + s.trust_score"
         >
-          <ion-label>{{ s.trust_score }}</ion-label>
-        </ion-chip>
+          {{ s.trust_score }}
+        </span>
         }
-      </ion-note>
-    </ion-item>
+      </div>
+    </a>
     }
-  </ion-list>
+  </div>
+
   @if (meta(); as m) {
-  <div class="ion-padding-top ion-text-center">
-    <ion-button
-      fill="clear"
-      (click)="prevPage()"
-      [disabled]="(query().page ?? 1) <= 1"
-    >
+  <div class="pagination">
+    <button (click)="prevPage()" [disabled]="(query().page ?? 1) <= 1">
       ← Trước
-    </ion-button>
-    <ion-text>Trang {{ query().page }} / {{ m.total_pages || 1 }}</ion-text>
-    <ion-button
-      fill="clear"
+    </button>
+    <span>Trang {{ query().page }} / {{ m.total_pages || 1 }}</span>
+    <button
       (click)="nextPage()"
       [disabled]="(query().page ?? 1) >= m.total_pages"
     >
       Sau →
-    </ion-button>
+    </button>
   </div>
   } }
-</ion-content>
+</div>

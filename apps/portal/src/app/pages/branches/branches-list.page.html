@@ -1,100 +1,118 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
-    </ion-buttons>
-    <ion-title>Chi nhánh</ion-title>
-    @if (isManagerOnly()) {
-    <ion-chip color="warning" slot="end">
-      <ion-label>Chỉ xem chi nhánh được phân công</ion-label>
-    </ion-chip>
-    }
-  </ion-toolbar>
-  <ion-toolbar>
-    <ion-searchbar
-      placeholder="Tìm theo mã hoặc tên"
-      debounce="300"
-      (ionInput)="onSearch($event)"
-    ></ion-searchbar>
-    <ion-select
-      slot="end"
-      placeholder="Trạng thái"
-      (ionChange)="onStatusChange($event)"
-    >
-      <ion-select-option [value]="null">Tất cả</ion-select-option>
-      <ion-select-option value="active">Đang hoạt động</ion-select-option>
-      <ion-select-option value="inactive">Ngừng hoạt động</ion-select-option>
-    </ion-select>
-  </ion-toolbar>
-</ion-header>
+<div class="page-container">
+  <div class="page-header">
+    <div class="title-section">
+      <h1>Chi nhánh</h1>
+      <p>Quản lý các cơ sở và chi nhánh của hệ thống</p>
+      @if (isManagerOnly()) {
+      <div class="warning-badge">Chỉ xem chi nhánh được phân công</div>
+      }
+    </div>
 
-<ion-content class="ion-padding">
+    <div class="actions">
+      @if (isAdmin()) {
+      <button class="btn-primary" (click)="openCreate()">
+        <ion-icon name="add-outline"></ion-icon>
+        Thêm chi nhánh mới
+      </button>
+      }
+    </div>
+  </div>
+
+  <div class="filters-bar">
+    <div class="search-input">
+      <ion-icon name="search-outline"></ion-icon>
+      <input
+        type="text"
+        placeholder="Tìm theo mã hoặc tên"
+        (input)="onSearch($event)"
+      />
+    </div>
+
+    <div class="filter-select">
+      <select (change)="onStatusChange($event)">
+        <option [value]="''">Tất cả trạng thái</option>
+        <option value="active">Đang hoạt động</option>
+        <option value="inactive">Ngừng hoạt động</option>
+      </select>
+    </div>
+  </div>
+
   @if (loading()) {
-  <ion-spinner name="crescent"></ion-spinner>
+  <div class="loading-state">
+    <p>Đang tải danh sách chi nhánh...</p>
+  </div>
   } @else if (branches().length === 0) {
-  <div class="ion-text-center ion-padding-top">
-    <ion-text color="medium">Chưa có chi nhánh nào</ion-text>
+  <div class="empty-state">
+    <p>Chưa có chi nhánh nào.</p>
   </div>
   } @else {
-  <ion-list>
+  <div class="list-container">
+    <div class="list-header">
+      <div class="col">CHI NHÁNH</div>
+      <div class="col">NHÂN SỰ</div>
+      <div class="col">TRẠNG THÁI</div>
+      <div class="col"></div>
+      <!-- Actions -->
+    </div>
+
     @for (branch of branches(); track branch.id) {
-    <ion-item-sliding #sliding>
-      <ion-item [routerLink]="['/branches', branch.id]" detail="true">
-        <ion-label>
-          <h2>{{ branch.code }} — {{ branch.name }}</h2>
-          <p>{{ branch.address }}</p>
-        </ion-label>
-        <ion-note slot="end">
-          <ion-chip [color]="branch.status === 'active' ? 'success' : 'medium'">
-            <ion-label
-              >{{ branch.status === 'active' ? 'Hoạt động' : 'Ngừng'
-              }}</ion-label
-            >
-          </ion-chip>
-          <ion-chip color="primary">
-            <ion-label>{{ branch.employee_count ?? 0 }} NV</ion-label>
-          </ion-chip>
-        </ion-note>
-      </ion-item>
-      @if (isAdmin()) {
-      <ion-item-options>
-        <ion-item-option color="primary" (click)="openEdit(branch, sliding)">
-          <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
-        </ion-item-option>
-        <ion-item-option
-          color="danger"
-          (click)="confirmDelete(branch, sliding)"
+    <div class="list-row">
+      <div class="col-info">
+        <a [routerLink]="['/branches', branch.id]">
+          <span class="code">{{ branch.code }}</span> — {{ branch.name }}
+        </a>
+        <span class="address">{{ branch.address }}</span>
+      </div>
+
+      <div class="col-stats">
+        <span class="stat-badge">{{ branch.employee_count ?? 0 }} NV</span>
+      </div>
+
+      <div class="col-status">
+        <span
+          class="badge"
+          [class]="branch.status === 'active' ? 'active' : 'inactive'"
         >
-          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-        </ion-item-option>
-      </ion-item-options>
-      }
-    </ion-item-sliding>
+          {{ branch.status === 'active' ? 'Hoạt động' : 'Ngừng' }}
+        </span>
+      </div>
+
+      <div class="col-actions">
+        @if (isAdmin()) {
+        <button
+          class="btn-edit"
+          (click)="openEdit(branch)"
+          aria-label="Chỉnh sửa"
+          title="Chỉnh sửa"
+        >
+          <ion-icon name="pencil-outline"></ion-icon>
+        </button>
+        <button
+          class="btn-delete"
+          (click)="confirmDelete(branch)"
+          aria-label="Xóa"
+          title="Xóa"
+        >
+          <ion-icon name="trash-outline"></ion-icon>
+        </button>
+        }
+      </div>
+    </div>
     }
-  </ion-list>
+  </div>
+
   @if (meta(); as m) {
-  <div class="ion-padding-top ion-text-center">
-    <ion-button
-      fill="clear"
-      (click)="prevPage()"
-      [disabled]="(query().page ?? 1) <= 1"
-    >
+  <div class="pagination">
+    <button (click)="prevPage()" [disabled]="(query().page ?? 1) <= 1">
       ← Trước
-    </ion-button>
-    <ion-text> Trang {{ query().page }} / {{ m.total_pages || 1 }} </ion-text>
-    <ion-button
-      fill="clear"
+    </button>
+    <span>Trang {{ query().page }} / {{ m.total_pages || 1 }}</span>
+    <button
       (click)="nextPage()"
       [disabled]="(query().page ?? 1) >= m.total_pages"
     >
       Sau →
-    </ion-button>
+    </button>
   </div>
-  } } @if (isAdmin()) {
-  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-    <ion-fab-button (click)="openCreate()">
-      <ion-icon name="add-outline"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
-  }
-</ion-content>
+  } }
+</div>

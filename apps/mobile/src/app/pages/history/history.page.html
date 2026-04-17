@@ -1,0 +1,93 @@
+<ion-content [fullscreen]="true">
+  <div class="background-elements">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+
+  <div class="header-section">
+    <div class="header-content">
+      <h1 class="page-title">Lịch sử</h1>
+      <p class="page-subtitle">Quá trình chấm công của bạn</p>
+    </div>
+  </div>
+
+  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="main-content">
+    @if (loading()) {
+    <div class="loading-state">
+      <ion-spinner name="dots" color="primary"></ion-spinner>
+      <p>Đang tải dữ liệu...</p>
+    </div>
+    } @else if (sessions().length === 0) {
+    <div class="empty-state glass-card">
+      <div class="empty-icon-wrap">
+        <ion-icon name="time-outline"></ion-icon>
+      </div>
+      <p>Chưa có lịch sử chấm công</p>
+    </div>
+    } @else {
+    <div class="history-list">
+      @for (s of sessions(); track s.id) {
+      <div class="glass-card history-card">
+        <div class="card-header">
+          <div class="date-info">
+            <div class="icon-wrap">
+              <ion-icon name="calendar-clear-outline"></ion-icon>
+            </div>
+            <span class="date-text">{{ s.work_date }}</span>
+          </div>
+          <div class="badges-wrap">
+            @if (s.trust_score !== null) {
+            <div
+              class="trust-badge"
+              [class]="s.trust_score >= 70 ? 'success' : s.trust_score >= 40 ? 'warning' : 'danger'"
+            >
+              {{ s.trust_score }}
+            </div>
+            }
+            <div
+              class="status-badge"
+              [class]="s.status === 'on-time' ? 'on-time' : s.status === 'late' ? 'late' : 'absent'"
+            >
+              {{ formatStatus(s.status) }}
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="time-row">
+            <div class="time-box in">
+              <span class="label">Vào ca</span>
+              <span class="value"
+                >{{ s.check_in_at ? (s.check_in_at | date : 'HH:mm') : '--:--'
+                }}</span
+              >
+            </div>
+            <div class="time-divider">
+              <ion-icon name="arrow-forward-outline"></ion-icon>
+            </div>
+            <div class="time-box out">
+              <span class="label">Tan ca</span>
+              <span class="value"
+                >{{ s.check_out_at ? (s.check_out_at | date : 'HH:mm') : '--:--'
+                }}</span
+              >
+            </div>
+          </div>
+        </div>
+
+        @if (s.worked_minutes) {
+        <div class="card-footer">
+          <ion-icon name="hourglass-outline"></ion-icon>
+          <span>Giờ làm: <strong>{{ s.worked_minutes }} phút</strong></span>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+  </div>
+</ion-content>

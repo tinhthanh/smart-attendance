@@ -1,0 +1,84 @@
+<ion-content [fullscreen]="true">
+  <div class="background-elements">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+
+  <div class="header-section">
+    <div class="header-content">
+      <h1 class="page-title">Hồ sơ</h1>
+      <p class="page-subtitle">Thông tin tài khoản của bạn</p>
+    </div>
+  </div>
+
+  <div class="main-content">
+    @if (auth.currentUser(); as u) {
+    <!-- User Header Card -->
+    <div class="glass-card profile-header-card">
+      <div class="avatar-wrapper">
+        <div class="avatar-circle">{{ u.full_name.charAt(0) }}</div>
+        <div class="status-indicator"></div>
+      </div>
+      <h2 class="user-name">{{ u.full_name }}</h2>
+      <p class="user-email">{{ u.email }}</p>
+
+      <div class="roles-container">
+        @for (r of u.roles; track r) {
+        <span class="role-badge">{{ r }}</span>
+        }
+      </div>
+    </div>
+
+    <!-- Detail Info Card -->
+    @if (u.employee; as e) {
+    <div class="glass-card info-card">
+      <div class="info-group">
+        <div class="icon-wrap">
+          <ion-icon name="id-card-outline"></ion-icon>
+        </div>
+        <div class="info-content">
+          <span class="info-label">Mã nhân viên</span>
+          <span class="info-value">{{ e.employee_code }}</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      @if (e.primary_branch; as b) {
+      <div class="info-group">
+        <div class="icon-wrap">
+          <ion-icon name="location-outline"></ion-icon>
+        </div>
+        <div class="info-content">
+          <span class="info-label">Chi nhánh chính</span>
+          <span class="info-value">{{ b.name }}</span>
+        </div>
+      </div>
+      <div class="divider"></div>
+      } @if (e.department; as d) {
+      <div class="info-group">
+        <div class="icon-wrap">
+          <ion-icon name="business-outline"></ion-icon>
+        </div>
+        <div class="info-content">
+          <span class="info-label">Phòng ban</span>
+          <span class="info-value">{{ d.name }}</span>
+        </div>
+      </div>
+      }
+    </div>
+    }
+
+    <!-- Logout action -->
+    <div class="action-section">
+      <button class="modern-action-btn btn-logout" (click)="onLogout()">
+        <div class="btn-content">
+          <ion-icon name="log-out-outline" class="btn-icon"></ion-icon>
+          <span class="btn-title">Đăng xuất tài khoản</span>
+        </div>
+        <div class="btn-bg-effect"></div>
+      </button>
+    </div>
+    }
+  </div>
+</ion-content>

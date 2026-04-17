@@ -1,198 +1,223 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/branches"></ion-back-button>
-    </ion-buttons>
-    <ion-title>
-      @if (branch(); as b) { {{ b.code }} — {{ b.name }} }
-    </ion-title>
-    @if (isAdmin()) {
-    <ion-buttons slot="end">
-      <ion-button (click)="openEdit()">
-        <ion-icon slot="start" name="create-outline"></ion-icon>
-        Sửa
-      </ion-button>
-    </ion-buttons>
-    }
-  </ion-toolbar>
-  <ion-toolbar>
-    <ion-segment [value]="activeTab()" (ionChange)="onTabChange($event)">
-      <ion-segment-button value="info">
-        <ion-label>Thông tin</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="wifi">
-        <ion-label>WiFi</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="geofence">
-        <ion-label>Geofence</ion-label>
-      </ion-segment-button>
-    </ion-segment>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content class="ion-padding">
+<div class="page-container">
   @if (loading()) {
-  <ion-spinner name="crescent"></ion-spinner>
-  } @else if (branch(); as b) { @if (activeTab() === 'info') {
-  <ion-list>
-    <ion-item
-      ><ion-label
-        ><h3>Mã</h3>
-        <p>{{ b.code }}</p></ion-label
-      ></ion-item
+  <div class="loading-state">
+    <p>Đang tải thông tin chi nhánh...</p>
+  </div>
+  } @else if (branch(); as b) {
+  <div class="page-header">
+    <div class="header-left">
+      <a routerLink="/branches" class="btn-back" title="Quay lại danh sách">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </a>
+      <h1>
+        {{ b.name }}
+        <span class="code">— {{ b.code }}</span>
+      </h1>
+    </div>
+
+    @if (isAdmin()) {
+    <button class="btn-primary" (click)="openEdit()">
+      <ion-icon name="create-outline"></ion-icon>
+      Sửa thông tin
+    </button>
+    }
+  </div>
+
+  <div class="tabs-nav">
+    <button
+      [class.active]="activeTab() === 'info'"
+      (click)="activeTab.set('info')"
     >
-    <ion-item
-      ><ion-label
-        ><h3>Tên</h3>
-        <p>{{ b.name }}</p></ion-label
-      ></ion-item
+      Thông tin
+    </button>
+    <button
+      [class.active]="activeTab() === 'wifi'"
+      (click)="activeTab.set('wifi')"
     >
-    <ion-item
-      ><ion-label
-        ><h3>Địa chỉ</h3>
-        <p>{{ b.address || '-' }}</p></ion-label
-      ></ion-item
+      WiFi
+    </button>
+    <button
+      [class.active]="activeTab() === 'geofence'"
+      (click)="activeTab.set('geofence')"
     >
-    <ion-item
-      ><ion-label
-        ><h3>Vị trí</h3>
-        <p>{{ b.latitude }}, {{ b.longitude }}</p></ion-label
-      ></ion-item
-    >
-    <ion-item
-      ><ion-label
-        ><h3>Bán kính</h3>
-        <p>{{ b.radius_meters }} m</p></ion-label
-      ></ion-item
-    >
-    <ion-item
-      ><ion-label
-        ><h3>Múi giờ</h3>
-        <p>{{ b.timezone }}</p></ion-label
-      ></ion-item
-    >
-    <ion-item>
-      <ion-label><h3>Trạng thái</h3></ion-label>
-      <ion-chip [color]="b.status === 'active' ? 'success' : 'medium'">
-        <ion-label
-          >{{ b.status === 'active' ? 'Hoạt động' : 'Ngừng' }}</ion-label
+      Geofence (Khu vực GPS)
+    </button>
+  </div>
+
+  <div class="tab-content">
+    @if (activeTab() === 'info') {
+    <div class="info-grid">
+      <div class="info-item">
+        <span class="info-label">Mã chi nhánh</span>
+        <span class="value">{{ b.code }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Tên chi nhánh</span>
+        <span class="value">{{ b.name }}</span>
+      </div>
+      <div class="info-item" style="grid-column: span 2">
+        <span class="info-label">Địa chỉ</span>
+        <span class="value">{{ b.address || 'Chưa cập nhật' }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Tọa độ GPS (Vị trí)</span>
+        <span class="value">{{ b.latitude }}, {{ b.longitude }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Bán kính cho phép</span>
+        <span class="value">{{ b.radius_meters }}m</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Múi giờ</span>
+        <span class="value">{{ b.timezone }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Trạng thái</span>
+        <span
+          class="badge"
+          [class.success]="b.status === 'active'"
+          [class.medium]="b.status !== 'active'"
         >
-      </ion-chip>
-    </ion-item>
-  </ion-list>
-  } @if (activeTab() === 'wifi') {
-  <h3>Cấu hình WiFi</h3>
-  @if (wifiConfigs().length === 0) {
-  <ion-text color="medium">Chưa có WiFi nào</ion-text>
-  } @else {
-  <ion-list>
-    @for (w of wifiConfigs(); track w.id) {
-    <ion-item>
-      <ion-label>
-        <h2>{{ w.ssid }}</h2>
-        <p>BSSID: {{ w.bssid || '(không có)' }} — Priority: {{ w.priority }}</p>
-      </ion-label>
-      @if (isAdmin()) {
-      <ion-button
-        slot="end"
-        color="danger"
-        fill="clear"
-        (click)="removeWifi(w)"
-      >
-        <ion-icon slot="icon-only" name="close-outline"></ion-icon>
-      </ion-button>
+          {{ b.status === 'active' ? 'Hoạt động' : 'Đã khóa' }}
+        </span>
+      </div>
+    </div>
+    } @else if (activeTab() === 'wifi') { @if (wifiConfigs().length === 0) {
+    <div class="empty-state">
+      <p>Chi nhánh này chưa có mạng WiFi nào được cấu hình.</p>
+    </div>
+    } @else {
+    <div class="data-list">
+      @for (w of wifiConfigs(); track w.id) {
+      <div class="data-item">
+        <div class="item-info">
+          <h4><ion-icon name="wifi-outline"></ion-icon> {{ w.ssid }}</h4>
+          <p>Mã BSSID: {{ w.bssid || 'Không định tuyến' }}</p>
+          <p>Độ ưu tiên (Priority): {{ w.priority }}</p>
+        </div>
+        @if (isAdmin()) {
+        <div class="item-actions">
+          <button
+            class="btn-delete"
+            (click)="removeWifi(w)"
+            title="Xóa WiFi này"
+          >
+            <ion-icon name="trash-outline"></ion-icon>
+          </button>
+        </div>
+        }
+      </div>
       }
-    </ion-item>
-    }
-  </ion-list>
-  } @if (isAdmin()) {
-  <br />
-  <h4>Thêm WiFi mới</h4>
-  <form [formGroup]="wifiForm" (ngSubmit)="addWifi()">
-    <ion-item
-      ><ion-input
-        label="SSID"
-        labelPlacement="floating"
-        formControlName="ssid"
-      ></ion-input
-    ></ion-item>
-    <ion-item
-      ><ion-input
-        label="BSSID (aa:bb:cc:dd:ee:ff)"
-        labelPlacement="floating"
-        formControlName="bssid"
-      ></ion-input
-    ></ion-item>
-    <ion-item
-      ><ion-input
-        label="Priority"
-        labelPlacement="floating"
-        type="number"
-        formControlName="priority"
-      ></ion-input
-    ></ion-item>
-    <br />
-    <ion-button expand="block" type="submit" [disabled]="wifiForm.invalid"
-      >Thêm</ion-button
-    >
-  </form>
-  } } @if (activeTab() === 'geofence') {
-  <h3>Geofences</h3>
-  @if (geofences().length === 0) {
-  <ion-text color="medium">Chưa có geofence nào</ion-text>
-  } @else {
-  <ion-list>
-    @for (g of geofences(); track g.id) {
-    <ion-item>
-      <ion-label>
-        <h2>{{ g.name }}</h2>
-        <p>
-          {{ g.center_lat }}, {{ g.center_lng }} — bán kính {{ g.radius_meters
-          }}m
-        </p>
-      </ion-label>
-    </ion-item>
-    }
-  </ion-list>
-  } @if (isAdmin()) {
-  <br />
-  <h4>Thêm Geofence</h4>
-  <form [formGroup]="geofenceForm" (ngSubmit)="addGeofence()">
-    <ion-item
-      ><ion-input
-        label="Tên"
-        labelPlacement="floating"
-        formControlName="name"
-      ></ion-input
-    ></ion-item>
-    <ion-item
-      ><ion-input
-        label="Vĩ độ"
-        labelPlacement="floating"
-        type="number"
-        formControlName="center_lat"
-      ></ion-input
-    ></ion-item>
-    <ion-item
-      ><ion-input
-        label="Kinh độ"
-        labelPlacement="floating"
-        type="number"
-        formControlName="center_lng"
-      ></ion-input
-    ></ion-item>
-    <ion-item
-      ><ion-input
-        label="Bán kính (m) 10-2000"
-        labelPlacement="floating"
-        type="number"
-        formControlName="radius_meters"
-      ></ion-input
-    ></ion-item>
-    <br />
-    <ion-button expand="block" type="submit" [disabled]="geofenceForm.invalid"
-      >Thêm</ion-button
-    >
-  </form>
-  } } }
-</ion-content>
+    </div>
+    } @if (isAdmin()) {
+    <div class="form-section">
+      <h3>Thêm WiFi chấm công mới</h3>
+      <form [formGroup]="wifiForm" (ngSubmit)="addWifi()">
+        <div class="form-group">
+          <label for="wifiSsid">Tên WiFi (SSID)</label>
+          <input
+            id="wifiSsid"
+            type="text"
+            formControlName="ssid"
+            placeholder="Nhập tên mạng WiFi"
+          />
+        </div>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px">
+          <div class="form-group">
+            <label for="wifiBssid">Địa chỉ MAC (BSSID)</label>
+            <input
+              id="wifiBssid"
+              type="text"
+              formControlName="bssid"
+              placeholder="Ví dụ: AA:BB:CC:DD:EE:FF"
+            />
+          </div>
+          <div class="form-group">
+            <label for="wifiPriority">Độ ưu tiên</label>
+            <input id="wifiPriority" type="number" formControlName="priority" placeholder="10" />
+          </div>
+        </div>
+        <button type="submit" class="btn-submit" [disabled]="wifiForm.invalid">
+          Thêm mạng WiFi
+        </button>
+      </form>
+    </div>
+    } } @else if (activeTab() === 'geofence') { @if (geofences().length === 0) {
+    <div class="empty-state">
+      <p>Chi nhánh này chưa có khu vực chấm công GPS nào.</p>
+    </div>
+    } @else {
+    <div class="data-list">
+      @for (g of geofences(); track g.id) {
+      <div class="data-item">
+        <div class="item-info">
+          <h4><ion-icon name="map-outline"></ion-icon> {{ g.name }}</h4>
+          <p>
+            Tọa độ: {{ g.center_lat || $any(g).centerLat }}, {{ g.center_lng ||
+            $any(g).centerLng }}
+          </p>
+          <p>
+            Bán kính khu vực (Radius):
+            <strong>{{ g.radius_meters || $any(g).radiusMeters }}m</strong>
+          </p>
+        </div>
+      </div>
+      }
+    </div>
+    } @if (isAdmin()) {
+    <div class="form-section">
+      <h3>Thêm phân vùng Geofence mới</h3>
+      <form [formGroup]="geofenceForm" (ngSubmit)="addGeofence()">
+        <div class="form-group">
+          <label for="geoName">Tên khu vực</label>
+          <input
+            id="geoName"
+            type="text"
+            formControlName="name"
+            placeholder="Ví dụ: Cổng sau tòa nhà"
+          />
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
+          <div class="form-group">
+            <label for="geoLat">Vĩ độ tâm (Center Latitude)</label>
+            <input
+              id="geoLat"
+              type="number"
+              step="any"
+              formControlName="center_lat"
+              placeholder="10.762622"
+            />
+          </div>
+          <div class="form-group">
+            <label for="geoLng">Kinh độ tâm (Center Longitude)</label>
+            <input
+              id="geoLng"
+              type="number"
+              step="any"
+              formControlName="center_lng"
+              placeholder="106.660172"
+            />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="geoRadius">Bán kính vùng phủ sóng (m)</label>
+          <input
+            id="geoRadius"
+            type="number"
+            formControlName="radius_meters"
+            placeholder="Từ 10 đến 2000m"
+          />
+        </div>
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="geofenceForm.invalid"
+        >
+          Thêm vùng Geo
+        </button>
+      </form>
+    </div>
+    } }
+  </div>
+  }
+</div>

@@ -1,29 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import {
-  ToastController,
-  IonBadge,
-  IonButton,
-  IonButtons,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
-  IonChip,
-  IonContent,
-  IonHeader,
-  IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonMenuButton,
-  IonNote,
-  IonSpinner,
-  IonText,
-  IonTitle,
-  IonToolbar,
-} from '@ionic/angular/standalone';
+import { ToastController, IonIcon } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { checkmarkCircleOutline, refreshOutline } from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
@@ -39,31 +17,9 @@ addIcons({
 @Component({
   selector: 'app-anomalies',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterLink,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonButtons,
-    IonMenuButton,
-    IonContent,
-    IonCard,
-    IonCardHeader,
-    IonCardTitle,
-    IonCardContent,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonNote,
-    IonChip,
-    IonBadge,
-    IonButton,
-    IonIcon,
-    IonText,
-    IonSpinner,
-  ],
+  imports: [CommonModule, RouterLink, IonIcon],
   templateUrl: './anomalies.page.html',
+  styleUrl: './anomalies.page.scss',
 })
 export class AnomaliesPage {
   private readonly api = inject(DashboardApiService);

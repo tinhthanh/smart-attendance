@@ -8,77 +8,44 @@ import {
 import {
   ToastController,
   IonButton,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardSubtitle,
-  IonCardTitle,
-  IonContent,
   IonInput,
   IonItem,
   IonSpinner,
+  IonIcon,
+  IonContent,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import {
+  fingerPrintOutline,
+  mailOutline,
+  lockClosedOutline,
+  arrowForwardOutline,
+} from 'ionicons/icons';
 import { AuthService } from '../../core/auth/auth.service';
 import { showErrorToast } from '../../core/util/error-toast.util';
+
+addIcons({
+  'finger-print-outline': fingerPrintOutline,
+  'mail-outline': mailOutline,
+  'lock-closed-outline': lockClosedOutline,
+  'arrow-forward-outline': arrowForwardOutline,
+});
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [
+    IonContent,
     ReactiveFormsModule,
     IonContent,
-    IonCard,
-    IonCardHeader,
-    IonCardTitle,
-    IonCardSubtitle,
-    IonCardContent,
     IonItem,
     IonInput,
     IonButton,
     IonSpinner,
+    IonIcon,
   ],
-  template: `
-    <ion-content class="ion-padding">
-      <div class="login-container">
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>Smart Attendance</ion-card-title>
-            <ion-card-subtitle>Đăng nhập nhân viên</ion-card-subtitle>
-          </ion-card-header>
-          <ion-card-content>
-            <form [formGroup]="form" (ngSubmit)="onSubmit()">
-              <ion-item>
-                <ion-input
-                  label="Email"
-                  labelPlacement="floating"
-                  type="email"
-                  formControlName="email"
-                ></ion-input>
-              </ion-item>
-              <ion-item>
-                <ion-input
-                  label="Mật khẩu"
-                  labelPlacement="floating"
-                  type="password"
-                  formControlName="password"
-                ></ion-input>
-              </ion-item>
-              <br />
-              <ion-button
-                expand="block"
-                type="submit"
-                [disabled]="form.invalid || loading()"
-              >
-                @if (loading()) {
-                <ion-spinner name="crescent"></ion-spinner>
-                } @else { Đăng nhập }
-              </ion-button>
-            </form>
-          </ion-card-content>
-        </ion-card>
-      </div>
-    </ion-content>
-  `,
+  templateUrl: './login.page.html',
+  styleUrl: './login.page.scss',
 })
 export class LoginPage {
   private readonly auth = inject(AuthService);

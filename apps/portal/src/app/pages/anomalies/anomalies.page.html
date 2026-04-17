@@ -1,107 +1,90 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
-    </ion-buttons>
-    <ion-title>Bất thường</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="refresh()" [disabled]="loading()">
-        <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
+<div class="page-container">
+  <div class="page-header">
+    <h1>Bất thường Hệ thống</h1>
+    <button
+      class="btn-refresh"
+      [class.loading]="loading()"
+      (click)="refresh()"
+      [disabled]="loading()"
+    >
+      <ion-icon name="refresh-outline"></ion-icon>
+      Làm mới
+    </button>
+  </div>
 
-<ion-content class="ion-padding">
   @if (loading()) {
-  <ion-spinner name="crescent"></ion-spinner>
+  <div class="loading-state">
+    <p>Đang phân tích dữ liệu...</p>
+  </div>
   } @else if (isEmpty()) {
-  <div class="ion-text-center ion-padding-top">
-    <ion-icon
-      name="checkmark-circle-outline"
-      size="large"
-      color="success"
-    ></ion-icon>
-    <br />
-    <ion-text color="success">
-      <h3>Hệ thống bình thường</h3>
-      <p>Chưa phát hiện bất thường nào trong dữ liệu hôm nay.</p>
-    </ion-text>
+  <div class="system-normal">
+    <ion-icon name="checkmark-circle-outline"></ion-icon>
+    <h3>Hệ thống hoạt động bình thường</h3>
+    <p>Chưa phát hiện bất thường nào trong dữ liệu chấm công hôm nay.</p>
   </div>
   } @else if (data(); as d) {
+  <div class="anomaly-grid">
+    <div class="anomaly-card">
+      <div class="card-header">
+        <h2>Thiết bị mới chưa được cấp phép (Trusted)</h2>
+      </div>
+      <div class="metric-large">
+        <span class="number">{{ d.untrusted_devices_new_today }}</span>
+        <span class="text">thiết bị xuất hiện hôm nay</span>
+      </div>
+    </div>
 
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>Thiết bị mới chưa tin cậy</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <ion-badge color="primary" style="font-size: 1.5em"
-        >{{ d.untrusted_devices_new_today }}</ion-badge
-      >
-      <ion-text class="ion-padding-start">thiết bị xuất hiện hôm nay</ion-text>
-    </ion-card-content>
-  </ion-card>
+    <div class="anomaly-card">
+      <div class="card-header">
+        <h2>Chi nhánh có biểu hiện đi trễ bất thường (Spike)</h2>
+      </div>
 
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>Chi nhánh có spike đi trễ</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
       @if (d.branches_late_spike.length === 0) {
-      <ion-text color="medium">Không có chi nhánh bất thường.</ion-text>
+      <p class="empty-text">Không có chi nhánh ghi nhận bất thường.</p>
       } @else {
-      <ion-list>
+      <div class="data-list">
         @for (b of d.branches_late_spike; track b.branch_id) {
-        <ion-item
-          [routerLink]="['/dashboard/branch', b.branch_id]"
-          detail="true"
-          button="true"
-        >
-          <ion-label>
+        <a [routerLink]="['/dashboard/branch', b.branch_id]" class="data-item">
+          <div class="info">
             <h3>{{ b.name }}</h3>
             <p>
-              Hôm nay {{ (b.late_rate_today * 100) | number:'1.1-1' }}% · TB 7
-              ngày {{ (b.late_rate_avg_7d * 100) | number:'1.1-1' }}%
+              Hôm nay: {{ (b.late_rate_today * 100) | number:'1.1-1' }}% · TB 7
+              ngày qua: {{ (b.late_rate_avg_7d * 100) | number:'1.1-1' }}%
             </p>
-          </ion-label>
-          <ion-note slot="end">
-            <ion-chip color="danger">×{{ b.spike_ratio }}</ion-chip>
-          </ion-note>
-        </ion-item>
+          </div>
+          <span class="badge danger">✕ Tăng vọt gấp {{ b.spike_ratio }}</span>
+        </a>
         }
-      </ion-list>
+      </div>
       }
-    </ion-card-content>
-  </ion-card>
+    </div>
 
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>Nhân viên trust score thấp</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
+    <div class="anomaly-card">
+      <div class="card-header">
+        <h2>Nhân viên có độ phân tích (Trust Score) thấp</h2>
+      </div>
+
       @if (d.employees_low_trust.length === 0) {
-      <ion-text color="medium">Không có nhân viên đáng nghi.</ion-text>
+      <p class="empty-text">
+        Không có nhân viên thao tác bất thường hoặc đáng nghi ngờ.
+      </p>
       } @else {
-      <ion-list>
+      <div class="data-list">
         @for (e of d.employees_low_trust; track e.employee_id) {
-        <ion-item
-          [routerLink]="['/employees', e.employee_id]"
-          detail="true"
-          button="true"
-        >
-          <ion-label>
-            <h3>{{ e.code }}</h3>
-            <p>{{ e.low_trust_count_7d }} phiên đáng nghi trong 7 ngày</p>
-          </ion-label>
-          <ion-note slot="end">
-            <ion-badge color="warning">{{ e.low_trust_count_7d }}</ion-badge>
-          </ion-note>
-        </ion-item>
+        <a [routerLink]="['/employees', e.employee_id]" class="data-item">
+          <div class="info">
+            <h3>Mã NV: {{ e.code }}</h3>
+            <p>
+              Có {{ e.low_trust_count_7d }} phiên chấm công đáng nghi trong 7
+              ngày qua
+            </p>
+          </div>
+          <span class="badge warning">{{ e.low_trust_count_7d }} phiên</span>
+        </a>
         }
-      </ion-list>
+      </div>
       }
-    </ion-card-content>
-  </ion-card>
-
+    </div>
+  </div>
   }
-</ion-content>
+</div>

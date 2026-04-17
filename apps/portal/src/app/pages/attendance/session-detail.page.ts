@@ -1,28 +1,10 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   ModalController,
   ToastController,
-  IonBackButton,
-  IonButton,
-  IonButtons,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardSubtitle,
-  IonCardTitle,
-  IonChip,
-  IonContent,
-  IonHeader,
   IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonSpinner,
-  IonText,
-  IonTitle,
-  IonToolbar,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -30,6 +12,16 @@ import {
   checkmarkCircle,
   closeCircle,
   hammerOutline,
+  arrowBackOutline,
+  calendarOutline,
+  idCardOutline,
+  businessOutline,
+  listOutline,
+  timeOutline,
+  gitNetworkOutline,
+  shieldCheckmarkOutline,
+  locationOutline,
+  wifiOutline,
 } from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
 import { AttendanceApiService } from '../../core/attendance/attendance.api.service';
@@ -54,35 +46,24 @@ addIcons({
   'close-circle': closeCircle,
   'alert-circle': alertCircle,
   'hammer-outline': hammerOutline,
+  'arrow-back-outline': arrowBackOutline,
+  'calendar-outline': calendarOutline,
+  'id-card-outline': idCardOutline,
+  'business-outline': businessOutline,
+  'list-outline': listOutline,
+  'time-outline': timeOutline,
+  'git-network-outline': gitNetworkOutline,
+  'shield-checkmark-outline': shieldCheckmarkOutline,
+  'location-outline': locationOutline,
+  'wifi-outline': wifiOutline,
 });
 
 @Component({
   selector: 'app-session-detail',
   standalone: true,
-  imports: [
-    DatePipe,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonButtons,
-    IonBackButton,
-    IonContent,
-    IonCard,
-    IonCardHeader,
-    IonCardTitle,
-    IonCardSubtitle,
-    IonCardContent,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonChip,
-    IonButton,
-    IonIcon,
-    IonText,
-    IonSpinner,
-    RiskFlagChipComponent,
-  ],
+  imports: [DatePipe, IonIcon, RiskFlagChipComponent, RouterLink],
   templateUrl: './session-detail.page.html',
+  styleUrl: './session-detail.page.scss',
 })
 export class SessionDetailPage {
   private readonly api = inject(AttendanceApiService);

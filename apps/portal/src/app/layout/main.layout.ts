@@ -1,21 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
-import {
-  IonButton,
-  IonChip,
-  IonContent,
-  IonHeader,
-  IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonMenu,
-  IonMenuToggle,
-  IonRouterOutlet,
-  IonSplitPane,
-  IonTitle,
-  IonToolbar,
-} from '@ionic/angular/standalone';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { IonIcon } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   alertCircleOutline,
@@ -39,25 +24,9 @@ addIcons({
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [
-    RouterLink,
-    RouterLinkActive,
-    IonSplitPane,
-    IonMenu,
-    IonContent,
-    IonList,
-    IonItem,
-    IonIcon,
-    IonLabel,
-    IonMenuToggle,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonButton,
-    IonChip,
-    IonRouterOutlet,
-  ],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, IonIcon],
   templateUrl: './main.layout.html',
+  styleUrl: './main.layout.scss',
 })
 export class MainLayout {
   readonly auth = inject(AuthService);

@@ -1,95 +1,102 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
-    </ion-buttons>
-    <ion-title>Nhân viên</ion-title>
-    @if (isManagerOnly()) {
-    <ion-chip color="warning" slot="end">
-      <ion-label>Chỉ xem nhân viên trong phạm vi phân công</ion-label>
-    </ion-chip>
-    }
-  </ion-toolbar>
-  <ion-toolbar>
-    <ion-searchbar
-      placeholder="Tìm theo mã, email, tên"
-      debounce="300"
-      (ionInput)="onSearch($event)"
-    ></ion-searchbar>
-    <ion-select
-      slot="end"
-      placeholder="Chi nhánh"
-      (ionChange)="onBranchChange($event)"
-    >
-      <ion-select-option [value]="null">Tất cả chi nhánh</ion-select-option>
-      @for (b of branches(); track b.id) {
-      <ion-select-option [value]="b.id">{{ b.code }}</ion-select-option>
+<div class="page-container">
+  <div class="page-header">
+    <div class="title-section">
+      <h1>Nhân viên</h1>
+      <p>Quản lý danh sách nhân sự của hệ thống</p>
+      @if (isManagerOnly()) {
+      <div class="warning-badge">Chỉ xem nhân viên trong phạm vi phân công</div>
       }
-    </ion-select>
-    <ion-select
-      slot="end"
-      placeholder="Trạng thái"
-      (ionChange)="onStatusChange($event)"
-    >
-      <ion-select-option [value]="null">Tất cả</ion-select-option>
-      <ion-select-option value="active">Active</ion-select-option>
-      <ion-select-option value="on_leave">On leave</ion-select-option>
-      <ion-select-option value="terminated">Terminated</ion-select-option>
-    </ion-select>
-  </ion-toolbar>
-</ion-header>
+    </div>
 
-<ion-content class="ion-padding">
+    <div class="actions">
+      @if (isAdmin()) {
+      <button class="btn-primary" (click)="openCreate()">
+        <ion-icon name="add-outline"></ion-icon>
+        Thêm nhân viên mới
+      </button>
+      }
+    </div>
+  </div>
+
+  <div class="filters-bar">
+    <div class="search-input">
+      <ion-icon name="search-outline"></ion-icon>
+      <input
+        type="text"
+        placeholder="Tìm theo mã, email, tên"
+        (input)="onSearch($event)"
+      />
+    </div>
+
+    <div class="filter-select">
+      <select (change)="onBranchChange($event)">
+        <option [value]="''">Tất cả chi nhánh</option>
+        @for (b of branches(); track b.id) {
+        <option [value]="b.id">{{ b.code }} - {{ b.name }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="filter-select">
+      <select (change)="onStatusChange($event)">
+        <option [value]="''">Tất cả trạng thái</option>
+        <option value="active">Active</option>
+        <option value="on_leave">On leave</option>
+        <option value="terminated">Terminated</option>
+      </select>
+    </div>
+  </div>
+
   @if (loading()) {
-  <ion-spinner name="crescent"></ion-spinner>
+  <div class="loading-state">
+    <p>Đang tải danh sách nhân viên...</p>
+  </div>
   } @else if (employees().length === 0) {
-  <div class="ion-text-center ion-padding-top">
-    <ion-text color="medium">Không có nhân viên</ion-text>
+  <div class="empty-state">
+    <p>Không tìm thấy nhân viên nào phù hợp.</p>
   </div>
   } @else {
-  <ion-list>
+  <div class="list-container">
+    <div class="list-header">
+      <div class="col">NHÂN VIÊN</div>
+      <div class="col">CHI NHÁNH BỔ NHIỆM</div>
+      <div class="col">TRẠNG THÁI</div>
+    </div>
+
     @for (emp of employees(); track emp.id) {
-    <ion-item [routerLink]="['/employees', emp.id]" detail="true">
-      <ion-label>
-        <h2>{{ emp.employee_code }} — {{ emp.user.full_name }}</h2>
-        <p>{{ emp.user.email }}</p>
-      </ion-label>
-      <ion-note slot="end">
-        <ion-chip color="primary">
-          <ion-label>{{ emp.primary_branch?.name || '-' }}</ion-label>
-        </ion-chip>
-        <ion-chip
-          [color]="emp.employment_status === 'active' ? 'success' : 'medium'"
+    <a [routerLink]="['/employees', emp.id]" class="list-row">
+      <div class="col-user">
+        <span class="name"
+          ><span class="code">{{ emp.employee_code }}</span> — {{
+          emp.user.full_name }}</span
         >
-          <ion-label>{{ emp.employment_status }}</ion-label>
-        </ion-chip>
-      </ion-note>
-    </ion-item>
+        <span class="email-code">{{ emp.user.email }}</span>
+      </div>
+      <div class="col-branch">{{ emp.primary_branch?.name || '-' }}</div>
+      <div class="col-status">
+        <span
+          class="badge"
+          [class]="emp.employment_status === 'active' ? 'active' : (emp.employment_status === 'on_leave' ? 'on_leave' : 'terminated')"
+        >
+          {{ emp.employment_status }}
+        </span>
+      </div>
+    </a>
     }
-  </ion-list>
+  </div>
+
   @if (meta(); as m) {
-  <div class="ion-padding-top ion-text-center">
-    <ion-button
-      fill="clear"
-      (click)="prevPage()"
-      [disabled]="(query().page ?? 1) <= 1"
-    >
+  <div class="pagination">
+    <button (click)="prevPage()" [disabled]="(query().page ?? 1) <= 1">
       ← Trước
-    </ion-button>
-    <ion-text>Trang {{ query().page }} / {{ m.total_pages || 1 }}</ion-text>
-    <ion-button
-      fill="clear"
+    </button>
+    <span>Trang {{ query().page }} / {{ m.total_pages || 1 }}</span>
+    <button
       (click)="nextPage()"
       [disabled]="(query().page ?? 1) >= m.total_pages"
     >
       Sau →
-    </ion-button>
+    </button>
   </div>
-  } } @if (isAdmin()) {
-  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-    <ion-fab-button (click)="openCreate()">
-      <ion-icon name="add-outline"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
-  }
-</ion-content>
+  } }
+</div>
