@@ -5,30 +5,18 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   ModalController,
   ToastController,
-  IonBackButton,
-  IonButton,
-  IonButtons,
-  IonChip,
-  IonContent,
-  IonHeader,
-  IonInput,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonSegment,
-  IonSegmentButton,
-  IonSelect,
-  IonSelectOption,
-  IonSpinner,
-  IonText,
-  IonTitle,
-  IonToggle,
-  IonToolbar,
+  IonIcon,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import {
+  arrowBackOutline,
+  pencilOutline,
+  phonePortraitOutline,
+} from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { BranchesApiService } from '../../core/branches/branches.api.service';
@@ -41,32 +29,18 @@ import { Branch } from '../../shared/types/branch.types';
 import { Employee, EmployeeDevice } from '../../shared/types/employee.types';
 import { EmployeeFormModal } from './employee-form.modal';
 
+addIcons({
+  'arrow-back-outline': arrowBackOutline,
+  'pencil-outline': pencilOutline,
+  'phone-portrait-outline': phonePortraitOutline,
+});
+
 @Component({
   selector: 'app-employee-detail',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonButtons,
-    IonBackButton,
-    IonContent,
-    IonSegment,
-    IonSegmentButton,
-    IonLabel,
-    IonList,
-    IonItem,
-    IonChip,
-    IonButton,
-    IonInput,
-    IonSelect,
-    IonSelectOption,
-    IonText,
-    IonToggle,
-    IonSpinner,
-  ],
+  imports: [ReactiveFormsModule, RouterLink, IonIcon],
   templateUrl: './employee-detail.page.html',
+  styleUrl: './employee-detail.page.scss',
 })
 export class EmployeeDetailPage {
   private readonly api = inject(EmployeesApiService);
@@ -138,10 +112,7 @@ export class EmployeeDetailPage {
     }
   }
 
-  onTabChange(event: Event) {
-    const v = (event as CustomEvent<{ value: string }>).detail.value;
-    this.activeTab.set(v as 'info' | 'assignments' | 'devices');
-  }
+  // Removed unused onTabChange since we use inline .set() in HTML
 
   async openEdit() {
     const e = this.employee();

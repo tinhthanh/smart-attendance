@@ -5,31 +5,22 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   AlertController,
   ModalController,
   ToastController,
-  IonBackButton,
-  IonButton,
-  IonButtons,
-  IonChip,
-  IonContent,
-  IonHeader,
   IonIcon,
-  IonInput,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonSegment,
-  IonSegmentButton,
-  IonSpinner,
-  IonText,
-  IonTitle,
-  IonToolbar,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { closeOutline, createOutline } from 'ionicons/icons';
+import {
+  arrowBackOutline,
+  createOutline,
+  wifiOutline,
+  trashOutline,
+  mapOutline,
+  closeOutline,
+} from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { BranchesApiService } from '../../core/branches/branches.api.service';
@@ -44,32 +35,21 @@ import {
 } from '../../shared/types/branch.types';
 import { BranchFormModal } from './branch-form.modal';
 
-addIcons({ 'close-outline': closeOutline, 'create-outline': createOutline });
+addIcons({
+  'close-outline': closeOutline,
+  'create-outline': createOutline,
+  'arrow-back-outline': arrowBackOutline,
+  'wifi-outline': wifiOutline,
+  'trash-outline': trashOutline,
+  'map-outline': mapOutline,
+});
 
 @Component({
   selector: 'app-branch-detail',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonButtons,
-    IonBackButton,
-    IonContent,
-    IonSegment,
-    IonSegmentButton,
-    IonLabel,
-    IonList,
-    IonItem,
-    IonChip,
-    IonButton,
-    IonIcon,
-    IonInput,
-    IonText,
-    IonSpinner,
-  ],
+  imports: [ReactiveFormsModule, RouterLink, IonIcon],
   templateUrl: './branch-detail.page.html',
+  styleUrl: './branch-detail.page.scss',
 })
 export class BranchDetailPage {
   private readonly api = inject(BranchesApiService);
@@ -141,10 +121,7 @@ export class BranchDetailPage {
     }
   }
 
-  onTabChange(event: Event) {
-    const v = (event as CustomEvent<{ value: string }>).detail.value;
-    this.activeTab.set(v as 'info' | 'wifi' | 'geofence');
-  }
+  // Removed unused onTabChange since we use inline signal setting
 
   async openEdit() {
     const b = this.branch();

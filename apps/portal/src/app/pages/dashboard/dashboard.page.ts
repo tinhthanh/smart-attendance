@@ -1,26 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import {
-  ToastController,
-  IonButtons,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardSubtitle,
-  IonCardTitle,
-  IonChip,
-  IonContent,
-  IonGrid,
-  IonHeader,
-  IonLabel,
-  IonMenuButton,
-  IonRow,
-  IonSpinner,
-  IonText,
-  IonTitle,
-  IonToolbar,
-} from '@ionic/angular/standalone';
+import { ToastController } from '@ionic/angular/standalone';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
@@ -33,28 +14,9 @@ import { AdminOverview } from '../../shared/types/dashboard.types';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [
-    CommonModule,
-    NgApexchartsModule,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonButtons,
-    IonMenuButton,
-    IonContent,
-    IonCard,
-    IonCardHeader,
-    IonCardTitle,
-    IonCardSubtitle,
-    IonCardContent,
-    IonGrid,
-    IonRow,
-    IonChip,
-    IonLabel,
-    IonText,
-    IonSpinner,
-  ],
+  imports: [CommonModule, NgApexchartsModule],
   templateUrl: './dashboard.page.html',
+  styleUrl: './dashboard.page.scss',
 })
 export class DashboardPage {
   private readonly api = inject(DashboardApiService);

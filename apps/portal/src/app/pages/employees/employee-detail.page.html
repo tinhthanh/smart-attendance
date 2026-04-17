@@ -1,151 +1,176 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/employees"></ion-back-button>
-    </ion-buttons>
-    <ion-title>
-      @if (employee(); as e) { {{ e.employee_code }} — {{ e.user.full_name }} }
-    </ion-title>
-    @if (isAdmin()) {
-    <ion-buttons slot="end">
-      <ion-button (click)="openEdit()">Sửa</ion-button>
-    </ion-buttons>
-    }
-  </ion-toolbar>
-  <ion-toolbar>
-    <ion-segment [value]="activeTab()" (ionChange)="onTabChange($event)">
-      <ion-segment-button value="info"
-        ><ion-label>Thông tin</ion-label></ion-segment-button
-      >
-      <ion-segment-button value="assignments"
-        ><ion-label>Phân công</ion-label></ion-segment-button
-      >
-      <ion-segment-button value="devices"
-        ><ion-label>Thiết bị</ion-label></ion-segment-button
-      >
-    </ion-segment>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content class="ion-padding">
+<div class="page-container">
   @if (loading()) {
-  <ion-spinner name="crescent"></ion-spinner>
-  } @else if (employee(); as e) { @if (activeTab() === 'info') {
-  <ion-list>
-    <ion-item
-      ><ion-label
-        ><h3>Mã nhân viên</h3>
-        <p>{{ e.employee_code }}</p></ion-label
-      ></ion-item
-    >
-    <ion-item
-      ><ion-label
-        ><h3>Họ tên</h3>
-        <p>{{ e.user.full_name }}</p></ion-label
-      ></ion-item
-    >
-    <ion-item
-      ><ion-label
-        ><h3>Email</h3>
-        <p>{{ e.user.email }}</p></ion-label
-      ></ion-item
-    >
-    <ion-item
-      ><ion-label
-        ><h3>Điện thoại</h3>
-        <p>{{ e.user.phone || '-' }}</p></ion-label
-      ></ion-item
-    >
-    <ion-item
-      ><ion-label
-        ><h3>Chi nhánh chính</h3>
-        <p>{{ e.primary_branch?.name || '-' }}</p></ion-label
-      ></ion-item
-    >
-    <ion-item
-      ><ion-label
-        ><h3>Phòng ban</h3>
-        <p>{{ e.department?.name || '-' }}</p></ion-label
-      ></ion-item
-    >
-    <ion-item>
-      <ion-label><h3>Trạng thái</h3></ion-label>
-      <ion-chip
-        [color]="e.employment_status === 'active' ? 'success' : 'medium'"
-      >
-        <ion-label>{{ e.employment_status }}</ion-label>
-      </ion-chip>
-    </ion-item>
-  </ion-list>
-  } @if (activeTab() === 'assignments') {
-  <h3>Thêm phân công phụ</h3>
-  @if (isAdmin()) {
-  <form [formGroup]="assignmentForm" (ngSubmit)="addAssignment()">
-    <ion-item>
-      <ion-select
-        label="Chi nhánh"
-        labelPlacement="floating"
-        formControlName="branch_id"
-      >
-        @for (b of branches(); track b.id) {
-        <ion-select-option [value]="b.id"
-          >{{ b.code }} — {{ b.name }}</ion-select-option
-        >
-        }
-      </ion-select>
-    </ion-item>
-    <ion-item>
-      <ion-select
-        label="Loại"
-        labelPlacement="floating"
-        formControlName="assignment_type"
-      >
-        <ion-select-option value="secondary">Secondary</ion-select-option>
-        <ion-select-option value="temporary">Temporary</ion-select-option>
-      </ion-select>
-    </ion-item>
-    <ion-item>
-      <ion-input
-        label="Từ ngày (YYYY-MM-DD)"
-        labelPlacement="floating"
-        formControlName="effective_from"
-      ></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-input
-        label="Đến ngày (tùy chọn)"
-        labelPlacement="floating"
-        formControlName="effective_to"
-      ></ion-input>
-    </ion-item>
-    <br />
-    <ion-button expand="block" type="submit" [disabled]="assignmentForm.invalid"
-      >Thêm</ion-button
-    >
-  </form>
-  } @else {
-  <ion-text color="medium">Chỉ admin mới thêm được phân công.</ion-text>
-  } } @if (activeTab() === 'devices') {
-  <h3>Thiết bị của nhân viên</h3>
-  @if (devices().length === 0) {
-  <ion-text color="medium">Chưa có thiết bị nào</ion-text>
-  } @else {
-  <ion-list>
-    @for (d of devices(); track d.id) {
-    <ion-item>
-      <ion-label>
-        <h2>{{ d.device_name || d.platform }}</h2>
-        <p>{{ d.platform }} • v{{ d.app_version || '?' }}</p>
-        <p>Lần cuối: {{ d.last_seen_at || 'chưa từng' }}</p>
-      </ion-label>
-      <ion-toggle
-        slot="end"
-        [checked]="d.is_trusted"
-        (ionChange)="toggleDeviceTrust(d)"
-        >Trusted</ion-toggle
-      >
-    </ion-item>
+  <div class="loading-state">
+    <p>Đang tải dữ liệu nhân viên...</p>
+  </div>
+  } @else if (employee(); as e) {
+  <div class="page-header">
+    <div class="header-left">
+      <a routerLink="/employees" class="btn-back" title="Quay lại danh sách">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </a>
+      <h1>
+        {{ e.user.full_name }}
+        <span class="code">— {{ e.employee_code }}</span>
+      </h1>
+    </div>
+
+    @if (isAdmin()) {
+    <button class="btn-primary" (click)="openEdit()">
+      <ion-icon name="pencil-outline"></ion-icon>
+      Sửa thông tin
+    </button>
     }
-  </ion-list>
-  } } }
-</ion-content>
+  </div>
+
+  <div class="tabs-nav">
+    <button
+      [class.active]="activeTab() === 'info'"
+      (click)="activeTab.set('info')"
+    >
+      Thông tin
+    </button>
+    <button
+      [class.active]="activeTab() === 'assignments'"
+      (click)="activeTab.set('assignments')"
+    >
+      Phân công
+    </button>
+    <button
+      [class.active]="activeTab() === 'devices'"
+      (click)="activeTab.set('devices')"
+    >
+      Thiết bị
+    </button>
+  </div>
+
+  <div class="tab-content">
+    @if (activeTab() === 'info') {
+    <div class="info-grid">
+      <div class="info-item">
+        <label>Mã nhân viên</label>
+        <span class="value">{{ e.employee_code }}</span>
+      </div>
+      <div class="info-item">
+        <label>Họ tên</label>
+        <span class="value">{{ e.user.full_name }}</span>
+      </div>
+      <div class="info-item">
+        <label>Email</label>
+        <span class="value">{{ e.user.email }}</span>
+      </div>
+      <div class="info-item">
+        <label>Điện thoại</label>
+        <span class="value">{{ e.user.phone || '-' }}</span>
+      </div>
+      <div class="info-item">
+        <label>Chi nhánh chính</label>
+        <span class="value">{{ e.primary_branch?.name || '-' }}</span>
+      </div>
+      <div class="info-item">
+        <label>Phòng ban</label>
+        <span class="value">{{ e.department?.name || '-' }}</span>
+      </div>
+      <div class="info-item">
+        <label>Trạng thái</label>
+        <span
+          class="badge"
+          [class.success]="e.employment_status === 'active'"
+          [class.medium]="e.employment_status !== 'active'"
+        >
+          {{ e.employment_status }}
+        </span>
+      </div>
+    </div>
+    } @else if (activeTab() === 'assignments') {
+    <div class="form-section">
+      <h3>Thêm phân công phụ</h3>
+      @if (isAdmin()) {
+      <form [formGroup]="assignmentForm" (ngSubmit)="addAssignment()">
+        <div class="form-group">
+          <label>Chi nhánh</label>
+          <select formControlName="branch_id">
+            <option value="" disabled selected>Chọn chi nhánh...</option>
+            @for (b of branches(); track b.id) {
+            <option [value]="b.id">{{ b.code }} — {{ b.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Loại phân công</label>
+          <select formControlName="assignment_type">
+            <option value="secondary">Secondary</option>
+            <option value="temporary">Temporary</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Từ ngày</label>
+          <input type="date" formControlName="effective_from" />
+        </div>
+
+        <div class="form-group">
+          <label>Đến ngày</label>
+          <input
+            type="date"
+            formControlName="effective_to"
+            placeholder="Tùy chọn"
+          />
+        </div>
+
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="assignmentForm.invalid"
+        >
+          Thêm phân công
+        </button>
+      </form>
+      } @else {
+      <p style="color: var(--text-medium)">
+        Bạn cần quyền Admin để thêm phân công mới.
+      </p>
+      }
+    </div>
+    } @else if (activeTab() === 'devices') {
+    <h3>Các thiết bị đã đăng nhập</h3>
+    @if (devices().length === 0) {
+    <div class="empty-state">
+      <p>Nhân viên này chưa đăng nhập hoặc đăng ký thiết bị nào.</p>
+    </div>
+    } @else {
+    <div class="data-list">
+      @for (d of devices(); track d.id) {
+      <div class="data-item">
+        <div class="item-info">
+          <h4>
+            <ion-icon name="phone-portrait-outline"></ion-icon> {{ d.device_name
+            || 'Điện thoại ' + d.platform }}
+          </h4>
+          <p>
+            Hệ điều hành: {{ d.platform }} • Phiên bản app: v{{ d.app_version ||
+            '?' }}
+          </p>
+          <p>Lần cuối truy cập: {{ d.last_seen_at || 'chưa từng' }}</p>
+        </div>
+        <div class="item-actions">
+          <label class="toggle-wrap">
+            Tin cậy
+            <div class="toggle">
+              <input
+                type="checkbox"
+                [checked]="d.is_trusted"
+                (change)="toggleDeviceTrust(d)"
+              />
+              <span class="slider"></span>
+            </div>
+          </label>
+        </div>
+      </div>
+      }
+    </div>
+    } }
+  </div>
+  }
+</div>

@@ -8,42 +8,27 @@ import {
 import {
   ModalController,
   ToastController,
-  IonButton,
-  IonButtons,
-  IonContent,
-  IonHeader,
-  IonInput,
-  IonItem,
-  IonSelect,
-  IonSelectOption,
-  IonSpinner,
-  IonTitle,
-  IonToolbar,
+  IonIcon,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { closeOutline, syncOutline } from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
 import { EmployeesApiService } from '../../core/employees/employees.api.service';
 import { showErrorToast } from '../../core/util/error-toast.util';
 import { Branch } from '../../shared/types/branch.types';
 import { Employee } from '../../shared/types/employee.types';
 
+addIcons({
+  'close-outline': closeOutline,
+  'sync-outline': syncOutline,
+});
+
 @Component({
   selector: 'app-employee-form-modal',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonButtons,
-    IonButton,
-    IonContent,
-    IonItem,
-    IonInput,
-    IonSelect,
-    IonSelectOption,
-    IonSpinner,
-  ],
+  imports: [ReactiveFormsModule, IonIcon],
   templateUrl: './employee-form.modal.html',
+  styleUrl: './employee-form.modal.scss',
 })
 export class EmployeeFormModal {
   @Input() employee: Employee | null = null;

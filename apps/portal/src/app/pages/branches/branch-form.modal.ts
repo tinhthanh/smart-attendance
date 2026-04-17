@@ -8,37 +8,26 @@ import {
 import {
   ModalController,
   ToastController,
-  IonButton,
-  IonButtons,
-  IonContent,
-  IonHeader,
-  IonInput,
-  IonItem,
-  IonSpinner,
-  IonTitle,
-  IonToolbar,
+  IonIcon,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { closeOutline, syncOutline } from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
 import { BranchesApiService } from '../../core/branches/branches.api.service';
 import { showErrorToast } from '../../core/util/error-toast.util';
 import { BranchDetail } from '../../shared/types/branch.types';
 
+addIcons({
+  'close-outline': closeOutline,
+  'sync-outline': syncOutline,
+});
+
 @Component({
   selector: 'app-branch-form-modal',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonButtons,
-    IonButton,
-    IonContent,
-    IonItem,
-    IonInput,
-    IonSpinner,
-  ],
+  imports: [ReactiveFormsModule, IonIcon],
   templateUrl: './branch-form.modal.html',
+  styleUrl: './branch-form.modal.scss',
 })
 export class BranchFormModal {
   @Input() branch: BranchDetail | null = null;

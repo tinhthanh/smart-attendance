@@ -3,29 +3,10 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   ModalController,
   ToastController,
-  IonButton,
-  IonButtons,
-  IonChip,
-  IonContent,
-  IonFab,
-  IonFabButton,
-  IonHeader,
   IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonMenuButton,
-  IonNote,
-  IonSearchbar,
-  IonSelect,
-  IonSelectOption,
-  IonSpinner,
-  IonText,
-  IonTitle,
-  IonToolbar,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { addOutline } from 'ionicons/icons';
+import { addOutline, searchOutline } from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { BranchesApiService } from '../../core/branches/branches.api.service';
@@ -41,35 +22,14 @@ import {
 } from '../../shared/types/employee.types';
 import { EmployeeFormModal } from './employee-form.modal';
 
-addIcons({ 'add-outline': addOutline });
+addIcons({ 'add-outline': addOutline, 'search-outline': searchOutline });
 
 @Component({
   selector: 'app-employees-list',
   standalone: true,
-  imports: [
-    RouterLink,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    IonButtons,
-    IonMenuButton,
-    IonSearchbar,
-    IonSelect,
-    IonSelectOption,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonNote,
-    IonChip,
-    IonButton,
-    IonIcon,
-    IonFab,
-    IonFabButton,
-    IonSpinner,
-    IonText,
-  ],
+  imports: [RouterLink, IonIcon],
   templateUrl: './employees-list.page.html',
+  styleUrl: './employees-list.page.scss',
 })
 export class EmployeesListPage {
   private readonly api = inject(EmployeesApiService);
@@ -147,21 +107,21 @@ export class EmployeesListPage {
   }
 
   onSearch(event: Event) {
-    const v = (event as CustomEvent<{ value: string }>).detail.value || '';
+    const v = (event.target as HTMLInputElement).value || '';
     this.query.update((q) => ({ ...q, page: 1, search: v || undefined }));
     this.syncUrl();
     this.reload();
   }
 
   onBranchChange(event: Event) {
-    const v = (event as CustomEvent<{ value: string | null }>).detail.value;
+    const v = (event.target as HTMLSelectElement).value;
     this.query.update((q) => ({ ...q, page: 1, branch_id: v || undefined }));
     this.syncUrl();
     this.reload();
   }
 
   onStatusChange(event: Event) {
-    const v = (event as CustomEvent<{ value: string | null }>).detail.value;
+    const v = (event.target as HTMLSelectElement).value;
     this.query.update((q) => ({
       ...q,
       page: 1,

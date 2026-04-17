@@ -4,32 +4,15 @@ import {
   AlertController,
   ModalController,
   ToastController,
-  IonButton,
-  IonButtons,
-  IonChip,
-  IonContent,
-  IonFab,
-  IonFabButton,
-  IonHeader,
   IonIcon,
-  IonItem,
-  IonItemOption,
-  IonItemOptions,
-  IonItemSliding,
-  IonLabel,
-  IonList,
-  IonMenuButton,
-  IonNote,
-  IonSearchbar,
-  IonSelect,
-  IonSelectOption,
-  IonSpinner,
-  IonText,
-  IonTitle,
-  IonToolbar,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { addOutline, pencilOutline, trashOutline } from 'ionicons/icons';
+import {
+  addOutline,
+  pencilOutline,
+  trashOutline,
+  searchOutline,
+} from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { BranchesApiService } from '../../core/branches/branches.api.service';
@@ -48,38 +31,15 @@ addIcons({
   'add-outline': addOutline,
   'pencil-outline': pencilOutline,
   'trash-outline': trashOutline,
+  'search-outline': searchOutline,
 });
 
 @Component({
   selector: 'app-branches-list',
   standalone: true,
-  imports: [
-    RouterLink,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    IonButtons,
-    IonMenuButton,
-    IonSearchbar,
-    IonSelect,
-    IonSelectOption,
-    IonList,
-    IonItem,
-    IonItemSliding,
-    IonItemOptions,
-    IonItemOption,
-    IonLabel,
-    IonNote,
-    IonChip,
-    IonButton,
-    IonIcon,
-    IonFab,
-    IonFabButton,
-    IonSpinner,
-    IonText,
-  ],
+  imports: [RouterLink, IonIcon],
   templateUrl: './branches-list.page.html',
+  styleUrl: './branches-list.page.scss',
 })
 export class BranchesListPage {
   private readonly api = inject(BranchesApiService);
@@ -143,14 +103,14 @@ export class BranchesListPage {
   }
 
   onSearch(event: Event) {
-    const v = (event as CustomEvent<{ value: string }>).detail.value || '';
+    const v = (event.target as HTMLInputElement).value || '';
     this.query.update((q) => ({ ...q, page: 1, search: v || undefined }));
     this.syncUrl();
     this.reload();
   }
 
   onStatusChange(event: Event) {
-    const v = (event as CustomEvent<{ value: string | null }>).detail.value;
+    const v = (event.target as HTMLSelectElement).value;
     this.query.update((q) => ({
       ...q,
       page: 1,
@@ -188,8 +148,7 @@ export class BranchesListPage {
     }
   }
 
-  async openEdit(branch: Branch, slidingEl: IonItemSliding) {
-    await slidingEl.close();
+  async openEdit(branch: Branch) {
     const modal = await this.modalCtrl.create({
       component: BranchFormModal,
       componentProps: { branch },
@@ -202,8 +161,7 @@ export class BranchesListPage {
     }
   }
 
-  async confirmDelete(branch: Branch, slidingEl: IonItemSliding) {
-    await slidingEl.close();
+  async confirmDelete(branch: Branch) {
     const alert = await this.alertCtrl.create({
       header: 'Xác nhận xóa',
       message: `Xóa chi nhánh ${branch.code} — ${branch.name}?`,

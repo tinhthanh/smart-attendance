@@ -4,22 +4,10 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import {
   AlertController,
   ToastController,
-  IonBadge,
-  IonButton,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardSubtitle,
-  IonCardTitle,
-  IonChip,
   IonContent,
-  IonHeader,
+  IonCard,
   IonIcon,
-  IonLabel,
-  IonList,
   IonSpinner,
-  IonTitle,
-  IonToolbar,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -27,6 +15,15 @@ import {
   checkmarkCircle,
   cloudOfflineOutline,
   warningOutline,
+  fingerPrintOutline,
+  locationOutline,
+  idCardOutline,
+  businessOutline,
+  timeOutline,
+  shieldCheckmarkOutline,
+  calendarClearOutline,
+  logInOutline,
+  logOutOutline,
 } from 'ionicons/icons';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
@@ -55,6 +52,15 @@ addIcons({
   'alert-circle': alertCircle,
   'warning-outline': warningOutline,
   'cloud-offline-outline': cloudOfflineOutline,
+  'finger-print-outline': fingerPrintOutline,
+  'location-outline': locationOutline,
+  'id-card-outline': idCardOutline,
+  'business-outline': businessOutline,
+  'time-outline': timeOutline,
+  'shield-checkmark-outline': shieldCheckmarkOutline,
+  'calendar-clear-outline': calendarClearOutline,
+  'log-in-outline': logInOutline,
+  'log-out-outline': logOutOutline,
 });
 
 type CheckinResult =
@@ -64,26 +70,9 @@ type CheckinResult =
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [
-    DatePipe,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    IonCard,
-    IonCardHeader,
-    IonCardTitle,
-    IonCardSubtitle,
-    IonCardContent,
-    IonButton,
-    IonLabel,
-    IonList,
-    IonChip,
-    IonBadge,
-    IonIcon,
-    IonSpinner,
-  ],
+  imports: [DatePipe, IonContent, IonCard, IonIcon, IonSpinner],
   templateUrl: './home.page.html',
+  styleUrl: './home.page.scss',
 })
 export class HomePage {
   private readonly auth = inject(AuthService);

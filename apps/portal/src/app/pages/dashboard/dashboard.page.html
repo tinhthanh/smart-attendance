@@ -1,114 +1,84 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
-    </ion-buttons>
-    <ion-title>Dashboard</ion-title>
-  </ion-toolbar>
-</ion-header>
+<div class="dashboard-container">
+  <div class="page-header">
+    <h1>Tổng quan</h1>
+    <p>Đánh giá hiệu suất và hoạt động của doanh nghiệp</p>
+  </div>
 
-<ion-content class="ion-padding">
   @if (loading()) {
-  <ion-spinner name="crescent"></ion-spinner>
+  <div class="loading-state">
+    <p>Đang tải dữ liệu tổng quan...</p>
+  </div>
   } @else if (overview(); as o) {
+  <div class="overview-grid">
+    <div class="stat-card">
+      <span class="stat-label">Tổng nhân viên</span>
+      <span class="stat-value">{{ o.total_employees }}</span>
+    </div>
 
-  <ion-grid>
-    <ion-row>
-      <ion-card>
-        <ion-card-header>
-          <ion-card-subtitle>Tổng nhân viên</ion-card-subtitle>
-          <ion-card-title>{{ o.total_employees }}</ion-card-title>
-        </ion-card-header>
-      </ion-card>
-      <ion-card>
-        <ion-card-header>
-          <ion-card-subtitle>Tổng chi nhánh</ion-card-subtitle>
-          <ion-card-title>{{ o.total_branches }}</ion-card-title>
-        </ion-card-header>
-      </ion-card>
-      <ion-card>
-        <ion-card-header>
-          <ion-card-subtitle>Đã check-in hôm nay</ion-card-subtitle>
-          <ion-card-title>{{ o.today.checked_in }}</ion-card-title>
-        </ion-card-header>
-      </ion-card>
-      <ion-card>
-        <ion-card-header>
-          <ion-card-subtitle>Tỷ lệ đúng giờ</ion-card-subtitle>
-          <ion-card-title
-            >{{ (o.today.on_time_rate * 100) | number:'1.1-1'
-            }}%</ion-card-title
-          >
-        </ion-card-header>
-        <ion-card-content>
-          <ion-chip color="success"
-            ><ion-label>On-time {{ o.today.on_time }}</ion-label></ion-chip
-          >
-          <ion-chip color="warning"
-            ><ion-label>Late {{ o.today.late }}</ion-label></ion-chip
-          >
-          <ion-chip color="danger"
-            ><ion-label>Absent {{ o.today.absent }}</ion-label></ion-chip
-          >
-        </ion-card-content>
-      </ion-card>
-    </ion-row>
-  </ion-grid>
+    <div class="stat-card">
+      <span class="stat-label">Tổng chi nhánh</span>
+      <span class="stat-value">{{ o.total_branches }}</span>
+    </div>
 
-  <ion-grid>
-    <ion-row>
-      <ion-card style="width: 100%">
-        <ion-card-content>
-          @if (topOnTimeChart(); as c) {
-          <apx-chart
-            [series]="c.series"
-            [chart]="c.chart"
-            [xaxis]="c.xaxis"
-            [plotOptions]="c.plotOptions"
-            [colors]="c.colors"
-            [title]="c.title"
-          ></apx-chart>
-          }
-        </ion-card-content>
-      </ion-card>
-    </ion-row>
-    <ion-row>
-      <ion-card style="width: 100%">
-        <ion-card-content>
-          @if (topLateChart(); as c) {
-          <apx-chart
-            [series]="c.series"
-            [chart]="c.chart"
-            [xaxis]="c.xaxis"
-            [plotOptions]="c.plotOptions"
-            [colors]="c.colors"
-            [title]="c.title"
-          ></apx-chart>
-          }
-        </ion-card-content>
-      </ion-card>
-    </ion-row>
-    <ion-row>
-      <ion-card style="width: 100%">
-        <ion-card-content>
-          @if (heatmapChart(); as c) {
-          <apx-chart
-            [series]="c.series"
-            [chart]="c.chart"
-            [colors]="c.colors"
-            [title]="c.title"
-            [dataLabels]="c.dataLabels"
-          ></apx-chart>
-          }
-        </ion-card-content>
-      </ion-card>
-    </ion-row>
-  </ion-grid>
+    <div class="stat-card">
+      <span class="stat-label">Đã check-in hôm nay</span>
+      <span class="stat-value">{{ o.today.checked_in }}</span>
+    </div>
 
+    <div class="stat-card">
+      <span class="stat-label">Tỷ lệ đúng giờ</span>
+      <span class="stat-value"
+        >{{ (o.today.on_time_rate * 100) | number:'1.1-1' }}%</span
+      >
+      <div class="stat-badges">
+        <span class="badge success">On-time {{ o.today.on_time }}</span>
+        <span class="badge warning">Late {{ o.today.late }}</span>
+        <span class="badge danger">Absent {{ o.today.absent }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="charts-section">
+    @if (topOnTimeChart(); as c) {
+    <div class="chart-card">
+      <apx-chart
+        [series]="c.series"
+        [chart]="c.chart"
+        [xaxis]="c.xaxis"
+        [plotOptions]="c.plotOptions"
+        [colors]="c.colors"
+        [title]="c.title"
+      ></apx-chart>
+    </div>
+    } @if (topLateChart(); as c) {
+    <div class="chart-card">
+      <apx-chart
+        [series]="c.series"
+        [chart]="c.chart"
+        [xaxis]="c.xaxis"
+        [plotOptions]="c.plotOptions"
+        [colors]="c.colors"
+        [title]="c.title"
+      ></apx-chart>
+    </div>
+    } @if (heatmapChart(); as c) {
+    <div class="chart-card">
+      <apx-chart
+        [series]="c.series"
+        [chart]="c.chart"
+        [colors]="c.colors"
+        [title]="c.title"
+        [dataLabels]="c.dataLabels"
+      ></apx-chart>
+    </div>
+    }
+  </div>
   } @else {
-  <ion-text color="medium">
-    Chưa có dữ liệu — admin cần trigger cron daily-summary để khởi tạo
-    summaries.
-  </ion-text>
+  <div class="empty-state">
+    <p>
+      Chưa có dữ liệu — admin cần trigger cron daily-summary để khởi tạo
+      summaries.
+    </p>
+  </div>
   }
-</ion-content>
+</div>

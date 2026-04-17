@@ -1,0 +1,67 @@
+<div class="login-split-container">
+  <div class="login-left">
+    <div class="brand-content">
+      <div class="logo-box">
+        <!-- SVG Logo for Smart Attendance (A futuristic shield/eye or checkmark) -->
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          <path d="M9 12l2 2 4-4" />
+        </svg>
+      </div>
+      <h1>Smart Attendance</h1>
+      <p>
+        Nền tảng Quản trị & Nhận diện Dữ liệu chấm công thông minh dành cho Khối
+        điều hành.
+      </p>
+    </div>
+    <div class="decorative-circle c1"></div>
+    <div class="decorative-circle c2"></div>
+  </div>
+
+  <div class="login-right">
+    <div class="form-wrapper">
+      <h2>Đăng nhập</h2>
+      <p class="subtitle">
+        Vui lòng đăng nhập bằng tài khoản Quản trị viên (Admin)
+      </p>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label>Email Admin</label>
+          <input
+            type="email"
+            formControlName="email"
+            placeholder="admin@demo.com"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Mật khẩu</label>
+          <input
+            type="password"
+            formControlName="password"
+            placeholder="••••••••"
+          />
+        </div>
+
+        <button
+          type="submit"
+          class="btn-login"
+          [disabled]="form.invalid || loading()"
+        >
+          @if (loading()) {
+          <span class="spinner"></span> Đang xử lý... } @else { Đăng nhập hệ
+          thống }
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

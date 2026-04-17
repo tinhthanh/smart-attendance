@@ -1,88 +1,103 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <ion-title>{{ isEdit ? 'Sửa nhân viên' : 'Tạo nhân viên' }}</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="onCancel()">Hủy</ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
+<div class="modal-container">
+  <div class="modal-header">
+    <h2>{{ isEdit ? 'Sửa nhân viên' : 'Tạo nhân viên mới' }}</h2>
+    <button class="btn-close" (click)="onCancel()" type="button">
+      <ion-icon name="close-outline"></ion-icon>
+    </button>
+  </div>
 
-<ion-content class="ion-padding">
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <ion-item>
-      <ion-input
-        label="Email"
-        labelPlacement="floating"
-        type="email"
-        formControlName="email"
-      ></ion-input>
-    </ion-item>
-    @if (!isEdit) {
-    <ion-item>
-      <ion-input
-        label="Mật khẩu (≥8 ký tự)"
-        labelPlacement="floating"
-        type="password"
-        formControlName="password"
-      ></ion-input>
-    </ion-item>
-    }
-    <ion-item>
-      <ion-input
-        label="Họ tên"
-        labelPlacement="floating"
-        formControlName="full_name"
-      ></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-input
-        label="Điện thoại"
-        labelPlacement="floating"
-        formControlName="phone"
-      ></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-input
-        label="Mã nhân viên"
-        labelPlacement="floating"
-        formControlName="employee_code"
-      ></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-select
-        label="Chi nhánh chính"
-        labelPlacement="floating"
-        formControlName="primary_branch_id"
-      >
-        @for (b of branches; track b.id) {
-        <ion-select-option [value]="b.id"
-          >{{ b.code }} — {{ b.name }}</ion-select-option
-        >
-        }
-      </ion-select>
-    </ion-item>
-    @if (!isEdit) {
-    <ion-item>
-      <ion-select
-        label="Vai trò"
-        labelPlacement="floating"
-        formControlName="role"
-      >
-        <ion-select-option value="employee">Employee</ion-select-option>
-        <ion-select-option value="manager">Manager</ion-select-option>
-        <ion-select-option value="admin">Admin</ion-select-option>
-      </ion-select>
-    </ion-item>
-    }
-    <br />
-    <ion-button
-      expand="block"
+  <div class="modal-content">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" id="employee-form">
+      <div class="form-group">
+        <label>Email đăng nhập</label>
+        <input
+          type="email"
+          formControlName="email"
+          placeholder="Ví dụ: dn-haichau-emp-026@demo.com"
+        />
+      </div>
+
+      @if (!isEdit) {
+      <div class="form-group">
+        <label>Mật khẩu</label>
+        <input
+          type="password"
+          formControlName="password"
+          placeholder="Tối thiểu 8 ký tự"
+        />
+      </div>
+      }
+
+      <div class="form-group">
+        <label>Họ tên</label>
+        <input
+          type="text"
+          formControlName="full_name"
+          placeholder="Nhập họ và tên đầy đủ"
+        />
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
+        <div class="form-group">
+          <label>Điện thoại</label>
+          <input
+            type="text"
+            formControlName="phone"
+            placeholder="Số điện thoại liên lạc"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Mã nhân viên</label>
+          <input
+            type="text"
+            formControlName="employee_code"
+            placeholder="Ví dụ: DN-HaiChau-EMP-026"
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Chi nhánh chính</label>
+        <select formControlName="primary_branch_id">
+          <option value="" disabled selected>Chọn chi nhánh...</option>
+          @for (b of branches; track b.id) {
+          <option [value]="b.id">{{ b.code }} — {{ b.name }}</option>
+          }
+        </select>
+      </div>
+
+      @if (!isEdit) {
+      <div class="form-group">
+        <label>Vai trò hệ thống</label>
+        <select formControlName="role">
+          <option value="employee">Nhân viên (Employee)</option>
+          <option value="manager">Quản lý (Manager)</option>
+          <option value="admin">Quản trị viên (Admin)</option>
+        </select>
+      </div>
+      }
+    </form>
+  </div>
+
+  <div class="modal-footer">
+    <button
+      type="button"
+      class="btn-cancel"
+      (click)="onCancel()"
+      [disabled]="loading()"
+    >
+      Hủy
+    </button>
+    <button
       type="submit"
+      form="employee-form"
+      class="btn-submit"
       [disabled]="form.invalid || loading()"
     >
       @if (loading()) {
-      <ion-spinner name="crescent"></ion-spinner>
-      } @else { {{ isEdit ? 'Lưu thay đổi' : 'Tạo' }} }
-    </ion-button>
-  </form>
-</ion-content>
+      <ion-icon name="sync-outline"></ion-icon>
+      } @else { {{ isEdit ? 'Lưu thay đổi' : 'Tạo mới' }} }
+    </button>
+  </div>
+</div>
