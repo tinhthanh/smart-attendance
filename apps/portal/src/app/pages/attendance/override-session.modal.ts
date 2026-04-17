@@ -15,7 +15,7 @@ import {
 } from '../../shared/types/attendance-session.types';
 import { formatAttendanceStatus } from '@smart-attendance/shared/constants';
 
-addIcons({ 'arrow-forward-outline': arrowForwardOutline });
+
 
 @Component({
   selector: 'app-override-session-modal',
