@@ -9,76 +9,77 @@
     <p>Đang tải dữ liệu tổng quan...</p>
   </div>
   } @else if (overview(); as o) {
-  <div class="overview-grid">
-    <div class="stat-card">
-      <span class="stat-label">Tổng nhân viên</span>
-      <span class="stat-value">{{ o.total_employees }}</span>
-    </div>
 
-    <div class="stat-card">
-      <span class="stat-label">Tổng chi nhánh</span>
-      <span class="stat-value">{{ o.total_branches }}</span>
+  <!-- KPI Cards Row -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <sa-icon icon="solar:users-group-rounded-bold" [size]="52" [iconSize]="26" bgColor="rgba(22,163,106,0.1)" color="#16a34a" variant="rounded"></sa-icon>
+      <div class="kpi-info">
+        <span class="kpi-label">Tổng nhân viên</span>
+        <span class="kpi-value">{{ o.total_employees }}</span>
+      </div>
     </div>
-
-    <div class="stat-card">
-      <span class="stat-label">Đã check-in hôm nay</span>
-      <span class="stat-value">{{ o.today.checked_in }}</span>
+    <div class="kpi-card">
+      <sa-icon icon="solar:buildings-bold" [size]="52" [iconSize]="26" bgColor="rgba(59,130,246,0.1)" color="#3b82f6" variant="rounded"></sa-icon>
+      <div class="kpi-info">
+        <span class="kpi-label">Tổng chi nhánh</span>
+        <span class="kpi-value">{{ o.total_branches }}</span>
+      </div>
     </div>
-
-    <div class="stat-card">
-      <span class="stat-label">Tỷ lệ đúng giờ</span>
-      <span class="stat-value"
-        >{{ (o.today.on_time_rate * 100) | number:'1.1-1' }}%</span
-      >
-      <div class="stat-badges">
-        <span class="badge success">On-time {{ o.today.on_time }}</span>
-        <span class="badge warning">Late {{ o.today.late }}</span>
-        <span class="badge danger">Absent {{ o.today.absent }}</span>
+    <div class="kpi-card">
+      <sa-icon icon="solar:check-circle-bold" [size]="52" [iconSize]="26" bgColor="rgba(245,158,11,0.1)" color="#f59e0b" variant="rounded"></sa-icon>
+      <div class="kpi-info">
+        <span class="kpi-label">Check-in hôm nay</span>
+        <span class="kpi-value">{{ o.today.checked_in }}</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <sa-icon icon="solar:danger-triangle-bold" [size]="52" [iconSize]="26" bgColor="rgba(239,68,68,0.1)" color="#ef4444" variant="rounded"></sa-icon>
+      <div class="kpi-info">
+        <span class="kpi-label">Vắng hôm nay</span>
+        <span class="kpi-value">{{ o.today.absent }}</span>
       </div>
     </div>
   </div>
 
-  <div class="charts-section">
-    @if (topOnTimeChart(); as c) {
+  <!-- Charts Row 1: Gauge + Pie -->
+  <div class="charts-row-2col">
     <div class="chart-card">
-      <apx-chart
-        [series]="c.series"
-        [chart]="c.chart"
-        [xaxis]="c.xaxis"
-        [plotOptions]="c.plotOptions"
-        [colors]="c.colors"
-        [title]="c.title"
-      ></apx-chart>
+      <h3 class="chart-title">Tỷ lệ đúng giờ hôm nay</h3>
+      <div echarts [options]="onTimeRateGauge()" class="chart-gauge"></div>
+      <div class="stat-badges">
+        <span class="badge success">Đúng giờ: {{ o.today.on_time }}</span>
+        <span class="badge warning">Trễ: {{ o.today.late }}</span>
+        <span class="badge danger">Vắng: {{ o.today.absent }}</span>
+      </div>
     </div>
-    } @if (topLateChart(); as c) {
     <div class="chart-card">
-      <apx-chart
-        [series]="c.series"
-        [chart]="c.chart"
-        [xaxis]="c.xaxis"
-        [plotOptions]="c.plotOptions"
-        [colors]="c.colors"
-        [title]="c.title"
-      ></apx-chart>
+      <h3 class="chart-title">Phân bố trạng thái hôm nay</h3>
+      <div echarts [options]="statusPie()" class="chart-pie"></div>
     </div>
-    } @if (heatmapChart(); as c) {
-    <div class="chart-card">
-      <apx-chart
-        [series]="c.series"
-        [chart]="c.chart"
-        [colors]="c.colors"
-        [title]="c.title"
-        [dataLabels]="c.dataLabels"
-      ></apx-chart>
-    </div>
-    }
   </div>
+
+  <!-- Charts Row 2: Top On-time + Top Late -->
+  <div class="charts-row-2col">
+    <div class="chart-card">
+      <h3 class="chart-title">🏆 Top chi nhánh đúng giờ</h3>
+      <div echarts [options]="topOnTimeBar()" class="chart-bar"></div>
+    </div>
+    <div class="chart-card">
+      <h3 class="chart-title">⚠️ Top chi nhánh đi trễ</h3>
+      <div echarts [options]="topLateBar()" class="chart-bar"></div>
+    </div>
+  </div>
+
+  <!-- Heatmap Row -->
+  <div class="chart-card full-width">
+    <h3 class="chart-title">📊 Phân bố check-in theo giờ</h3>
+    <div echarts [options]="heatmapOption()" class="chart-heatmap"></div>
+  </div>
+
   } @else {
   <div class="empty-state">
-    <p>
-      Chưa có dữ liệu — admin cần trigger cron daily-summary để khởi tạo
-      summaries.
-    </p>
+    <p>Chưa có dữ liệu — admin cần trigger cron daily-summary để khởi tạo summaries.</p>
   </div>
   }
 </div>

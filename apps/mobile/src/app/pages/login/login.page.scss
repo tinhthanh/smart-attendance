@@ -18,18 +18,13 @@ ion-content.login-content {
   .logo-circle {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+    background: white;
     border-radius: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 24px;
-    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
-
-    ion-icon {
-      font-size: 40px;
-      color: white;
-    }
+    box-shadow: 0 10px 25px rgba(32, 139, 222, 0.2);
   }
 
   h1 {
@@ -82,9 +77,9 @@ ion-content.login-content {
 
       &.item-has-focus {
         --background: #fff;
-        box-shadow: 0 0 0 2px #10b981;
+        box-shadow: 0 0 0 2px #47BAC1;
         ion-icon {
-          color: #10b981;
+          color: #208BDE;
         }
       }
     }
@@ -94,10 +89,10 @@ ion-content.login-content {
     margin-top: 32px;
 
     .submit-btn {
-      --background: #10b981;
-      --background-hover: #059669;
+      --background: #208BDE;
+      --background-hover: #1b77bf;
       --border-radius: 16px;
-      --box-shadow: 0 8px 16px rgba(16, 185, 129, 0.25);
+      --box-shadow: 0 8px 16px rgba(32, 139, 222, 0.25);
       margin: 0;
       height: 56px;
       font-size: 16px;

@@ -1,30 +1,13 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { IonIcon } from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons';
-import {
-  alertCircleOutline,
-  businessOutline,
-  homeOutline,
-  logOutOutline,
-  peopleOutline,
-  timeOutline,
-} from 'ionicons/icons';
+import 'iconify-icon';
 import { AuthService } from '../core/auth/auth.service';
-
-addIcons({
-  'home-outline': homeOutline,
-  'business-outline': businessOutline,
-  'people-outline': peopleOutline,
-  'time-outline': timeOutline,
-  'alert-circle-outline': alertCircleOutline,
-  'log-out-outline': logOutOutline,
-});
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, IonIcon],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet],
   templateUrl: './main.layout.html',
   styleUrl: './main.layout.scss',
 })

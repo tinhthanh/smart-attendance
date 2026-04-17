@@ -1,8 +1,8 @@
 :host {
   --app-bg: #f8fafc;
-  --primary: #4f46e5;
-  --primary-light: #818cf8;
-  --secondary: #10b981;
+  --primary: #208BDE;
+  --primary-light: #5BA8E6;
+  --secondary: #47BAC1;
   --text-dark: #1e293b;
   --text-muted: #64748b;
   --glass-bg: rgba(255, 255, 255, 0.75);
@@ -84,8 +84,8 @@ ion-content {
     .brand-icon {
       font-size: 28px;
       color: var(--primary);
-      background: rgba(79, 70, 229, 0.1);
-      padding: 8px;
+      background: rgba(32, 139, 222, 0.1);
+      padding: 6px;
       border-radius: 12px;
     }
 
@@ -163,7 +163,7 @@ ion-content {
         color: white;
         font-size: 24px;
         font-weight: 700;
-        box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+        box-shadow: 0 4px 10px rgba(32, 139, 222, 0.3);
       }
     }
 
@@ -216,7 +216,7 @@ ion-content {
       }
 
       &.dept-tag {
-        background: rgba(79, 70, 229, 0.1);
+        background: rgba(32, 139, 222, 0.1);
         color: var(--primary);
 
         ion-icon {
@@ -257,12 +257,12 @@ ion-content {
       }
 
       &.checked_in {
-        background: rgba(79, 70, 229, 0.1);
+        background: rgba(32, 139, 222, 0.1);
         color: var(--primary);
       }
 
       &.done {
-        background: rgba(16, 185, 129, 0.1);
+        background: rgba(71, 186, 193, 0.1);
         color: var(--secondary);
       }
     }
@@ -324,11 +324,11 @@ ion-content {
 
         &.in {
           background: var(--primary);
-          box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
+          box-shadow: 0 0 0 4px rgba(32, 139, 222, 0.2);
         }
         &.out {
           background: var(--secondary);
-          box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+          box-shadow: 0 0 0 4px rgba(71, 186, 193, 0.2);
         }
       }
 
@@ -473,7 +473,7 @@ ion-content {
       }
     }
 
-    .btn-bg-effect {
+      .btn-bg-effect {
       position: absolute;
       top: 0;
       left: 0;
@@ -481,7 +481,7 @@ ion-content {
       bottom: 0;
       background: radial-gradient(
         circle at right bottom,
-        rgba(79, 70, 229, 0.8),
+        rgba(32, 139, 222, 0.8),
         transparent 60%
       );
       opacity: 0.5;
@@ -533,10 +533,10 @@ ion-content {
     gap: 16px;
     background: linear-gradient(
       135deg,
-      rgba(16, 185, 129, 0.1),
-      rgba(16, 185, 129, 0.05)
+      rgba(71, 186, 193, 0.1),
+      rgba(71, 186, 193, 0.05)
     );
-    border: 1px solid rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(71, 186, 193, 0.2);
     border-radius: 20px;
     padding: 20px;
     box-shadow: var(--shadow-sm);

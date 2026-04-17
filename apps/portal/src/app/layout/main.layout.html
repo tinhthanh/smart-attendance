@@ -2,28 +2,31 @@
   <!-- Static Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <h1>Smart Attendance</h1>
+      <div class="logo-wrap">
+        <iconify-icon icon="solar:shield-check-bold" width="28" height="28" style="color: #16a34a;"></iconify-icon>
+        <h1>Smart Attendance</h1>
+      </div>
     </div>
 
     <nav class="sidebar-nav">
       <a class="nav-item" routerLink="/dashboard" routerLinkActive="selected">
-        <ion-icon name="home-outline"></ion-icon>
+        <iconify-icon icon="solar:chart-square-bold" width="22" height="22"></iconify-icon>
         <span>Dashboard</span>
       </a>
       <a class="nav-item" routerLink="/branches" routerLinkActive="selected">
-        <ion-icon name="business-outline"></ion-icon>
+        <iconify-icon icon="solar:buildings-bold" width="22" height="22"></iconify-icon>
         <span>Chi nhánh</span>
       </a>
       <a class="nav-item" routerLink="/employees" routerLinkActive="selected">
-        <ion-icon name="people-outline"></ion-icon>
+        <iconify-icon icon="solar:users-group-rounded-bold" width="22" height="22"></iconify-icon>
         <span>Nhân viên</span>
       </a>
       <a class="nav-item" routerLink="/attendance" routerLinkActive="selected">
-        <ion-icon name="time-outline"></ion-icon>
+        <iconify-icon icon="solar:clock-circle-bold" width="22" height="22"></iconify-icon>
         <span>Chấm công</span>
       </a>
       <a class="nav-item" routerLink="/anomalies" routerLinkActive="selected">
-        <ion-icon name="alert-circle-outline"></ion-icon>
+        <iconify-icon icon="solar:danger-triangle-bold" width="22" height="22"></iconify-icon>
         <span>Bất thường</span>
       </a>
     </nav>
@@ -35,6 +38,9 @@
     <header class="topbar">
       @if (auth.currentUser(); as user) {
       <div class="user-badge">
+        <div class="user-avatar">
+          <iconify-icon icon="solar:user-circle-bold" width="32" height="32" style="color: var(--sage-600);"></iconify-icon>
+        </div>
         <span class="user-label">{{ userLabel() }}</span>
         <button
           class="btn-logout"
@@ -42,7 +48,7 @@
           aria-label="Đăng xuất"
           title="Đăng xuất"
         >
-          <ion-icon name="log-out-outline"></ion-icon>
+          <iconify-icon icon="solar:logout-2-bold" width="20" height="20"></iconify-icon>
         </button>
       </div>
       }
