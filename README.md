@@ -320,11 +320,10 @@ Xem [`PROMPT_LOG.md`](PROMPT_LOG.md) để hiểu cách team làm việc với A
 
 Các video được quay tự động bằng Playwright E2E test, mô phỏng luồng sử dụng thực tế:
 
-| Video                                                                     | Mô tả                                                                                                                            | Thời lượng |
-| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| [`portal-demo.webm`](e2e/videos/final/portal-demo.webm)                   | **Portal Admin/Manager** — Login → Dashboard (KPI, heatmap, top chi nhánh) → Quản lý nhân viên → Chấm công → Bất thường → Logout | ~1.6 phút  |
-| [`mobile-demo.webm`](e2e/videos/final/mobile-demo.webm)                   | **Mobile Employee** — Login → Check-in (GPS) → Check-out → Lịch sử → Profile → Logout                                            | ~50 giây   |
-| [`smart-attendance-demo.mp4`](e2e/videos/final/smart-attendance-demo.mp4) | **Combined** — Portal + Mobile ghép lại                                                                                          | ~2.4 phút  |
+| Video                                                   | Mô tả                                                                                                                            | Thời lượng |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| [`portal-demo.webm`](e2e/videos/final/portal-demo.webm) | **Portal Admin/Manager** — Login → Dashboard (KPI, heatmap, top chi nhánh) → Quản lý nhân viên → Chấm công → Bất thường → Logout | ~1.6 phút  |
+| [`mobile-demo.webm`](e2e/videos/final/mobile-demo.webm) | **Mobile Employee** — Login → Check-in (GPS) → Check-out → Lịch sử → Profile → Logout                                            | ~50 giây   |
 
 ### Highlight tính năng sáng tạo
 
