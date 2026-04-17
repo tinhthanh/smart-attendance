@@ -9,8 +9,9 @@
   <div class="modal-content">
     <form [formGroup]="form" (ngSubmit)="onSubmit()" id="employee-form">
       <div class="form-group">
-        <label>Email đăng nhập</label>
+        <label for="empEmail">Email đăng nhập</label>
         <input
+          id="empEmail"
           type="email"
           formControlName="email"
           placeholder="Ví dụ: dn-haichau-emp-026@demo.com"
@@ -19,8 +20,9 @@
 
       @if (!isEdit) {
       <div class="form-group">
-        <label>Mật khẩu</label>
+        <label for="empPassword">Mật khẩu</label>
         <input
+          id="empPassword"
           type="password"
           formControlName="password"
           placeholder="Tối thiểu 8 ký tự"
@@ -29,8 +31,9 @@
       }
 
       <div class="form-group">
-        <label>Họ tên</label>
+        <label for="empName">Họ tên</label>
         <input
+          id="empName"
           type="text"
           formControlName="full_name"
           placeholder="Nhập họ và tên đầy đủ"
@@ -39,8 +42,9 @@
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
         <div class="form-group">
-          <label>Điện thoại</label>
+          <label for="empPhone">Điện thoại</label>
           <input
+            id="empPhone"
             type="text"
             formControlName="phone"
             placeholder="Số điện thoại liên lạc"
@@ -48,8 +52,9 @@
         </div>
 
         <div class="form-group">
-          <label>Mã nhân viên</label>
+          <label for="empCode">Mã nhân viên</label>
           <input
+            id="empCode"
             type="text"
             formControlName="employee_code"
             placeholder="Ví dụ: DN-HaiChau-EMP-026"
@@ -58,8 +63,8 @@
       </div>
 
       <div class="form-group">
-        <label>Chi nhánh chính</label>
-        <select formControlName="primary_branch_id">
+        <label for="empBranch">Chi nhánh chính</label>
+        <select id="empBranch" formControlName="primary_branch_id">
           <option value="" disabled selected>Chọn chi nhánh...</option>
           @for (b of branches; track b.id) {
           <option [value]="b.id">{{ b.code }} — {{ b.name }}</option>
@@ -69,8 +74,8 @@
 
       @if (!isEdit) {
       <div class="form-group">
-        <label>Vai trò hệ thống</label>
-        <select formControlName="role">
+        <label for="empRole">Vai trò hệ thống</label>
+        <select id="empRole" formControlName="role">
           <option value="employee">Nhân viên (Employee)</option>
           <option value="manager">Quản lý (Manager)</option>
           <option value="admin">Quản trị viên (Admin)</option>

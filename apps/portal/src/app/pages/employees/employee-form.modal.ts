@@ -1,4 +1,4 @@
-import { Component, Input, inject, signal } from '@angular/core';
+import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -30,7 +30,7 @@ addIcons({
   templateUrl: './employee-form.modal.html',
   styleUrl: './employee-form.modal.scss',
 })
-export class EmployeeFormModal {
+export class EmployeeFormModal implements OnInit {
   @Input() employee: Employee | null = null;
   @Input() branches: Branch[] = [];
 

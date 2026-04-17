@@ -48,8 +48,9 @@
 
     <div class="filters-row">
       <div class="filter-group">
-        <label>Từ ngày</label>
+        <label for="filterDateFrom">Từ ngày</label>
         <input
+          id="filterDateFrom"
           type="date"
           [value]="query().date_from"
           (change)="onDateFrom($event)"
@@ -57,8 +58,9 @@
       </div>
 
       <div class="filter-group">
-        <label>Đến ngày</label>
+        <label for="filterDateTo">Đến ngày</label>
         <input
+          id="filterDateTo"
           type="date"
           [value]="query().date_to"
           (change)="onDateTo($event)"
@@ -66,8 +68,8 @@
       </div>
 
       <div class="filter-group">
-        <label>Chi nhánh</label>
-        <select (change)="onBranchChange($event)">
+        <label for="filterBranch">Chi nhánh</label>
+        <select id="filterBranch" (change)="onBranchChange($event)">
           <option [value]="''">Tất cả chi nhánh</option>
           @for (b of branches(); track b.id) {
           <option [value]="b.id">{{ b.code }}</option>
@@ -76,8 +78,8 @@
       </div>
 
       <div class="filter-group">
-        <label>Trạng thái</label>
-        <select (change)="onStatusChange($event)">
+        <label for="filterStatus">Trạng thái</label>
+        <select id="filterStatus" (change)="onStatusChange($event)">
           <option [value]="''">Tất cả trạng thái</option>
           <option value="on_time">Đúng giờ</option>
           <option value="late">Đi trễ</option>

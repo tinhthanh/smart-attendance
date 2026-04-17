@@ -9,16 +9,17 @@
   <div class="modal-content">
     <form [formGroup]="form" (ngSubmit)="onSubmit()" id="branch-form">
       <div class="form-group">
-        <label>Mã chi nhánh</label>
-        <input type="text" formControlName="code" placeholder="Ví dụ: HCM-Q1" />
+        <label for="branchCode">Mã chi nhánh</label>
+        <input id="branchCode" type="text" formControlName="code" placeholder="Ví dụ: HCM-Q1" />
         <span class="helper-text"
           >Sử dụng chữ hoa, số và dấu gạch ngang. Ít nhất 3 ký tự.</span
         >
       </div>
 
       <div class="form-group">
-        <label>Tên chi nhánh</label>
+        <label for="branchName">Tên chi nhánh</label>
         <input
+          id="branchName"
           type="text"
           formControlName="name"
           placeholder="Nhập tên chi nhánh"
@@ -26,8 +27,9 @@
       </div>
 
       <div class="form-group">
-        <label>Địa chỉ</label>
+        <label for="branchAddress">Địa chỉ</label>
         <input
+          id="branchAddress"
           type="text"
           formControlName="address"
           placeholder="Nhập địa chỉ đầy đủ"
@@ -36,8 +38,9 @@
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
         <div class="form-group">
-          <label>Vĩ độ (Latitude)</label>
+          <label for="branchLat">Vĩ độ (Latitude)</label>
           <input
+            id="branchLat"
             type="number"
             step="any"
             formControlName="latitude"
@@ -46,8 +49,9 @@
         </div>
 
         <div class="form-group">
-          <label>Kinh độ (Longitude)</label>
+          <label for="branchLng">Kinh độ (Longitude)</label>
           <input
+            id="branchLng"
             type="number"
             step="any"
             formControlName="longitude"
@@ -58,8 +62,9 @@
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
         <div class="form-group">
-          <label>Bán kính cho phép (m)</label>
+          <label for="branchRadius">Bán kính cho phép (m)</label>
           <input
+            id="branchRadius"
             type="number"
             formControlName="radius_meters"
             placeholder="Từ 50 đến 1000m"
@@ -67,8 +72,9 @@
         </div>
 
         <div class="form-group">
-          <label>Múi giờ</label>
+          <label for="branchTz">Múi giờ</label>
           <input
+            id="branchTz"
             type="text"
             formControlName="timezone"
             placeholder="Ví dụ: Asia/Ho_Chi_Minh"

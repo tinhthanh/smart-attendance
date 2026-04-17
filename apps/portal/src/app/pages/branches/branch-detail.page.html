@@ -48,31 +48,31 @@
     @if (activeTab() === 'info') {
     <div class="info-grid">
       <div class="info-item">
-        <label>Mã chi nhánh</label>
+        <span class="info-label">Mã chi nhánh</span>
         <span class="value">{{ b.code }}</span>
       </div>
       <div class="info-item">
-        <label>Tên chi nhánh</label>
+        <span class="info-label">Tên chi nhánh</span>
         <span class="value">{{ b.name }}</span>
       </div>
       <div class="info-item" style="grid-column: span 2">
-        <label>Địa chỉ</label>
+        <span class="info-label">Địa chỉ</span>
         <span class="value">{{ b.address || 'Chưa cập nhật' }}</span>
       </div>
       <div class="info-item">
-        <label>Tọa độ GPS (Vị trí)</label>
+        <span class="info-label">Tọa độ GPS (Vị trí)</span>
         <span class="value">{{ b.latitude }}, {{ b.longitude }}</span>
       </div>
       <div class="info-item">
-        <label>Bán kính cho phép</label>
+        <span class="info-label">Bán kính cho phép</span>
         <span class="value">{{ b.radius_meters }}m</span>
       </div>
       <div class="info-item">
-        <label>Múi giờ</label>
+        <span class="info-label">Múi giờ</span>
         <span class="value">{{ b.timezone }}</span>
       </div>
       <div class="info-item">
-        <label>Trạng thái</label>
+        <span class="info-label">Trạng thái</span>
         <span
           class="badge"
           [class.success]="b.status === 'active'"
@@ -114,8 +114,9 @@
       <h3>Thêm WiFi chấm công mới</h3>
       <form [formGroup]="wifiForm" (ngSubmit)="addWifi()">
         <div class="form-group">
-          <label>Tên WiFi (SSID)</label>
+          <label for="wifiSsid">Tên WiFi (SSID)</label>
           <input
+            id="wifiSsid"
             type="text"
             formControlName="ssid"
             placeholder="Nhập tên mạng WiFi"
@@ -123,16 +124,17 @@
         </div>
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px">
           <div class="form-group">
-            <label>Địa chỉ MAC (BSSID)</label>
+            <label for="wifiBssid">Địa chỉ MAC (BSSID)</label>
             <input
+              id="wifiBssid"
               type="text"
               formControlName="bssid"
               placeholder="Ví dụ: AA:BB:CC:DD:EE:FF"
             />
           </div>
           <div class="form-group">
-            <label>Độ ưu tiên</label>
-            <input type="number" formControlName="priority" placeholder="10" />
+            <label for="wifiPriority">Độ ưu tiên</label>
+            <input id="wifiPriority" type="number" formControlName="priority" placeholder="10" />
           </div>
         </div>
         <button type="submit" class="btn-submit" [disabled]="wifiForm.invalid">
@@ -167,8 +169,9 @@
       <h3>Thêm phân vùng Geofence mới</h3>
       <form [formGroup]="geofenceForm" (ngSubmit)="addGeofence()">
         <div class="form-group">
-          <label>Tên khu vực</label>
+          <label for="geoName">Tên khu vực</label>
           <input
+            id="geoName"
             type="text"
             formControlName="name"
             placeholder="Ví dụ: Cổng sau tòa nhà"
@@ -176,8 +179,9 @@
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
           <div class="form-group">
-            <label>Vĩ độ tâm (Center Latitude)</label>
+            <label for="geoLat">Vĩ độ tâm (Center Latitude)</label>
             <input
+              id="geoLat"
               type="number"
               step="any"
               formControlName="center_lat"
@@ -185,8 +189,9 @@
             />
           </div>
           <div class="form-group">
-            <label>Kinh độ tâm (Center Longitude)</label>
+            <label for="geoLng">Kinh độ tâm (Center Longitude)</label>
             <input
+              id="geoLng"
               type="number"
               step="any"
               formControlName="center_lng"
@@ -195,8 +200,9 @@
           </div>
         </div>
         <div class="form-group">
-          <label>Bán kính vùng phủ sóng (m)</label>
+          <label for="geoRadius">Bán kính vùng phủ sóng (m)</label>
           <input
+            id="geoRadius"
             type="number"
             formControlName="radius_meters"
             placeholder="Từ 10 đến 2000m"
