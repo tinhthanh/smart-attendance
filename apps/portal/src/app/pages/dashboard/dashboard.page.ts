@@ -232,7 +232,12 @@ export class DashboardPage {
       series: [{
         type: 'heatmap',
         data,
-        label: { show: true, fontSize: 11, color: '#374151' },
+        label: {
+          show: true,
+          fontSize: 11,
+          color: '#fff',
+          formatter: (p: { data: number[] }) => p.data[2] > 0 ? String(p.data[2]) : ''
+        },
         itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },
       }],
     };
