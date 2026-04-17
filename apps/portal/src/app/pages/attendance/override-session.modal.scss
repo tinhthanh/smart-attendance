@@ -250,8 +250,8 @@
   gap: 12px;
   
   button {
-    padding: 10px 24px;
-    border-radius: 10px;
+    padding: 8px 16px;
+    border-radius: 6px;
     font-size: 14px;
     font-weight: 600;
     font-family: inherit;
@@ -261,7 +261,7 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    height: 48px;
+    height: 38px;
 
     /* Removed .full-width to place buttons side-by-side cleanly */
 
@@ -286,7 +286,7 @@
   .btn-submit {
     border: none;
     color: white;
-    min-width: 140px;
+    min-width: 130px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 
     &.warning {
